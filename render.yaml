@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: blood-reign
-    runtime: node
-    plan: free
-    buildCommand: npm install
-    startCommand: npm start
-    healthCheckPath: /healthz
