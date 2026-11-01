@@ -307,7 +307,7 @@ function can(k,cost,cd){if(P.c[k]>0||P.en<cost)return false;P.en-=cost;P.c[k]=cd
 function claw(){if(P.cd>0||P.en<400)return;const a=near(P.cm?3.8:3);if(!a.length){msg('No one close enough');return}
  P.en-=400;P.cd=P.frenzy>0?.25:.6;P.atk=.4;P.m.rotation.y=Math.atan2(a[0].m.position.x-P.m.position.x,a[0].m.position.z-P.m.position.z);
  a.forEach(v=>drain(v,(P.cm?60:20)*(P.beast>0?2:1)*(P.frenzy>0?1.5:1)*mul()));S.claws+=a.length;near(14).forEach(v=>v.fear=6);P.bl=Math.min(100,P.bl+10*a.length);msg((P.cm?'Claws x':'Strike x')+a.length)}
-function primary(){if(P.stun>0)return;if(P.cls==='wolf')claw();else if(P.cls==='vampire')bite();else if(P.cls==='hunter'&&P.cd<=0){P.cd=.6;P.atk=.4;let hit=0;for(const o of mons.slice())if(flat(o.m.position,P.m.position)<3.4){hitMon(o,100,true);hit++}if(!hit)msg('Sword swing')}}
+function primary(){if(P.stun>0)return;if(P.cls==='civ'){msg('Civilians cannot fight. Press E at the cult to become a monster, or tell a Hunter.');return}if(P.cls==='wolf')claw();else if(P.cls==='vampire')bite();else if(P.cls==='hunter'&&P.cd<=0){P.cd=.6;P.atk=.4;let hit=0;for(const o of mons.slice())if(flat(o.m.position,P.m.position)<3.4){hitMon(o,100,true);hit++}if(!hit)msg('Sword swing')}}
 function power(k){if(P.stun>0)return;if(P.cls!=='vampire')return power2(k);
  if(P.cls==='vampire'){
   if(k==='e')return toggleForm('bat');
@@ -412,13 +412,13 @@ const others={};let ws=null,myId=0,sendT=0,online=0;
 function tag(name){const c=document.createElement('canvas');c.width=256;c.height=64;const x=c.getContext('2d');x.font='bold 34px Georgia';x.textAlign='center';x.fillStyle='#fff';x.strokeStyle='#000';x.lineWidth=6;x.strokeText(name,128,44);x.fillText(name,128,44);const sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(c),depthTest:false}));sp.scale.set(4,1,1);sp.position.y=3.6;return sp}
 function modelFor(c,f){if(c==='civ')return human();if(c==='hunter')return hunterM();if(c==='wolf')return wolf();if(c==='witch')return f==='cat'?cat():witch();return f==='bat'?bat():f==='human'?human():vamp()}
 function setRemote(d){let o=others[d.id];if(!o){o={cls:'',form:'',m:null};others[d.id]=o}
- if(o.cls!==d.c||o.form!==d.f){const old=o.m,pos=old?old.position.clone():new T.Vector3(d.x,d.y,d.z);if(old)sc.remove(old);o.m=modelFor(d.c,d.f);o.m.position.copy(pos);o.m.add(tag(d.n));o.m.scale.setScalar(d.c==='wolf'?1.2:1);sc.add(o.m);o.cls=d.c;o.form=d.f}
- o.tx=d.x;o.ty=d.y;o.tz=d.z;o.r=d.r}
+ if(o.cls!==d.c||o.form!==d.f){const old=o.m,pos=old?old.position.clone():new T.Vector3(d.x,d.y,d.z);if(old)sc.remove(old);o.m=modelFor(d.c,d.f);o.m.position.copy(pos);o.m.add(tag(d.n+' \u00b7 '+(CL[d.c]?CL[d.c].n:'')));o.m.scale.setScalar(d.c==='wolf'?1.2:1);sc.add(o.m);o.cls=d.c;o.form=d.f}
+ o.tx=d.x;o.ty=d.y;o.tz=d.z;o.r=d.r;updBar(o,d)}
 function dropRemotes(keep){for(const id in others)if(!keep||!keep[id]){if(others[id].m)sc.remove(others[id].m);delete others[id]}}
 function showTop(d){$('lb').innerHTML='<b>Village '+d.v+' vs Monsters '+d.m+'</b>'+d.top.map((r,i)=>'<div>'+(i+1)+'. '+String(r[0]).replace(/[<>&]/g,'')+' \u00b7 '+r[1]+'</div>').join('')}
 function connect(){try{ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host)}catch(e){return}
  ws.onmessage=e=>{let d;try{d=JSON.parse(e.data)}catch(x){return}
-  if(d.t==='hello'){myId=d.id;clock=60+d.e}else if(d.t==='t'){showTop(d)}else if(d.t==='chat'){addChat(d.n,d.m)}else if(d.t==='dmg'){P.hp-=d.d*(P.titan>0?.4:1);P.cause='Killed by '+d.from;if(!(P.titan>0)){if(d.fx==='stun')P.stun=d.sec;else if(d.fx==='slow')P.slowT=d.sec;else if(d.fx==='blind')P.blindT=d.sec}msg('Hit by '+d.from+' -'+Math.round(d.d));sfx(110,.15)}
+  if(d.t==='hello'){myId=d.id;clock=60+d.e}else if(d.t==='t'){showTop(d)}else if(d.t==='chat'){addChat(d.n,d.m)}else if(d.t==='kill'){score+=100;msg('You killed '+d.victim+'! +100');sfx(660,.3)}else if(d.t==='dmg'){P.hp-=d.d*(P.titan>0?.4:1);P.cause='Killed by '+d.from;P.lastFid=d.fid;P.lastT=Date.now();if(!(P.titan>0)){if(d.fx==='stun')P.stun=d.sec;else if(d.fx==='slow')P.slowT=d.sec;else if(d.fx==='blind')P.blindT=d.sec}msg('Hit by '+d.from+' -'+Math.round(d.d));sfx(110,.15)}
   else if(d.t==='time'){const c=60+d.e;if(Math.abs(c-clock)>1.5)clock=c}
   else if(d.t==='p'){online=d.list.length;const seen={};for(const q of d.list){if(q.id===myId)continue;seen[q.id]=1;setRemote(q)}dropRemotes(seen)}};
  ws.onclose=()=>{ws=null;dropRemotes(null);setTimeout(connect,3000)}}
@@ -426,7 +426,7 @@ connect();
 // ---- online fighting and chat ----
 const teamOf=c=>(c==='civ'||c==='hunter')?'v':'m';
 function sendHit(id,d,fx,sec){if(ws&&ws.readyState===1){ws.send(JSON.stringify({t:'hit',to:+id,d:Math.round(d),fx:fx||'',sec:sec||0}));score+=5}}
-function pvpTargets(r){const out=[];for(const id in others){const o=others[id];if(o.m&&teamOf(o.cls)!==teamOf(P.cls)&&flat(o.m.position,P.m.position)<r)out.push(id)}return out}
+function pvpTargets(r){const out=[];for(const id in others){const o=others[id];if(o.m&&!(teamOf(o.cls)==='v'&&teamOf(P.cls)==='v')&&flat(o.m.position,P.m.position)<r)out.push(id)}return out}
 function pvpHit(r,d,fx,sec){const a=pvpTargets(r),dm=d*mul();a.forEach(id=>sendHit(id,dm,fx,sec));if(a.length){S.kills+=a.length;if(P.lord>0)P.hp=Math.min(hpMax(),P.hp+30*a.length);msg('Hit '+a.length+' player'+(a.length>1?'s':'')+'!')}return a.length}
 const _bite=bite;bite=function(){const c0=P.cd;_bite();if(P.cd>c0+.1){pvpHit(2.8,50);return}
  if(P.cls==='vampire'&&P.cd<=0&&P.en>=500&&pvpTargets(2.8).length){P.en-=500;P.cd=.9;P.atk=.4;pvpHit(2.8,50);P.bl=Math.min(100,P.bl+10);P.taste+=bloodMoon?20:10}};
@@ -437,7 +437,7 @@ const _wp=wpower;wpower=function(k){const s0=P.shake||0;_wp(k);if(k==='t'&&P.sha
 const _sp=spell;spell=function(t,c){const m0=P.bl;_sp(t,c);const fx=t==='blind'?'blind':'slow',d=t==='infect'?5:1;
  if(P.bl<m0)pvpHit(14,d,fx,5);else if(P.form!=='cat'&&P.bl>=c&&pvpTargets(14).length){P.bl-=c;P.atk=.4;S.spells++;pvpHit(14,d,fx,5)}};
 $('tb').onpointerdown=primary;
-function pvpBolts(){for(const b of bolts){if(b.pv)continue;for(const id in others){const o=others[id];if(o.m&&teamOf(o.cls)!==teamOf(P.cls)&&Math.hypot(o.m.position.x-b.m.position.x,o.m.position.z-b.m.position.z)<1.6){sendHit(id,(b.dmg||80)*mul(),b.fx,b.sec);S.kills++;b.life=0;b.pv=1;break}}}}
+function pvpBolts(){for(const b of bolts){if(b.pv)continue;for(const id in others){const o=others[id];if(o.m&&!(teamOf(o.cls)==='v'&&teamOf(P.cls)==='v')&&Math.hypot(o.m.position.x-b.m.position.x,o.m.position.z-b.m.position.z)<1.6){sendHit(id,(b.dmg||80)*mul(),b.fx,b.sec);S.kills++;b.life=0;b.pv=1;break}}}}
 const esc=x=>String(x).replace(/[<>&"]/g,'');
 function addChat(n,m){const c=$('chat'),d=document.createElement('div');d.innerHTML='<b>'+esc(n)+'</b> '+esc(m);c.appendChild(d);while(c.children.length>7)c.removeChild(c.firstChild);setTimeout(()=>{d.style.opacity=.35},12000)}
 function openChat(){$('ci').style.display='block';$('ci').focus()}
@@ -446,8 +446,11 @@ function sendChat(){const v=$('ci').value.trim();$('ci').value='';closeChat();if
 $('ci').onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')sendChat();if(e.key==='Escape')closeChat()};
 $('cb').onclick=openChat;
 addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName!=='INPUT'&&$('intro').style.display==='none')openChat()});
-function netStep(dt){sendT-=dt;pvpBolts();
- if(ws&&ws.readyState===1&&sendT<=0){sendT=.1;const q=P.m.position;ws.send(JSON.stringify({t:'s',x:+q.x.toFixed(2),y:+q.y.toFixed(2),z:+q.z.toFixed(2),r:+P.m.rotation.y.toFixed(2),c:P.cls,f:P.form,n:myName||'Player',s:score}))}
+function deadCheck(){if(P.hp<=0&&!P.sentDead&&P.lastFid&&Date.now()-P.lastT<15000&&ws&&ws.readyState===1){P.sentDead=true;ws.send(JSON.stringify({t:'dead',by:P.lastFid}))}if(P.hp>0)P.sentDead=false}
+function updBar(o,d){if(!o.m)return;if(!o.bar||o.bar.parent!==o.m){const bg=new T.Sprite(new T.SpriteMaterial({color:0x330a10,depthTest:false}));bg.scale.set(3,.2,1);bg.position.y=3.15;const b=new T.Sprite(new T.SpriteMaterial({color:0x55dd77,depthTest:false}));b.position.y=3.15;o.m.add(bg);o.m.add(b);o.bar=b}
+ const r=Math.max(0,Math.min(1,(d.h||0)/(d.mh||1)));o.bar.scale.set(3*r+.001,.2,1);o.bar.position.x=-1.5*(1-r)}
+function netStep(dt){sendT-=dt;pvpBolts();deadCheck();
+ if(ws&&ws.readyState===1&&sendT<=0){sendT=.1;const q=P.m.position;ws.send(JSON.stringify({t:'s',x:+q.x.toFixed(2),y:+q.y.toFixed(2),z:+q.z.toFixed(2),r:+P.m.rotation.y.toFixed(2),c:P.cls,f:P.form,n:myName||'Player',s:score,h:Math.round(P.hp),mh:hpMax()}))}
  for(const id in others){const o=others[id],m=o.m,px=m.position.x,pz=m.position.z,k=Math.min(1,dt*10);
   m.position.x+=(o.tx-m.position.x)*k;m.position.y+=(o.ty-m.position.y)*k;m.position.z+=(o.tz-m.position.z)*k;m.rotation.y=o.r;
   const sp=Math.hypot(m.position.x-px,m.position.z-pz)/Math.max(dt,.001),u=m.userData,a=Math.sin(clock*10)*Math.min(1,sp/6)*.8;
