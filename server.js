@@ -1,9 +1,9 @@
 // Blood Reign Blood Gain: multiplayer server
-// Shares: world clock, players seeing each other, names, scores, leaderboard, the Village vs Monsters war and player-vs-player hits, status effects and chat.
+// Shares: world clock, players seeing each other, names, scores, leaderboard, the Village vs Monsters war and player-vs-player hits, status effects, chat and the world bosses.
 // Scores are reported by each player's browser (not verified) and the leaderboard is kept in memory only.
 const http = require('http'), fs = require('fs'), path = require('path');
 const { WebSocketServer } = require('ws');
-const PORT = process.env.PORT || 3000, START = Date.now();
+const PORT = process.env.PORT || 3000, START = Date.now() - (Number(process.env.TIME_OFFSET) || 0) * 1000;
 
 const server = http.createServer((req, res) => {
   if (req.url === '/healthz') { res.writeHead(200); res.end('ok'); return; }
@@ -13,16 +13,84 @@ const server = http.createServer((req, res) => {
 
 const wss = new WebSocketServer({ server, maxPayload: 2048 });
 const players = new Map(), best = new Map(), sockets = new Map(), hitLog = new Map(), lastChat = new Map(), lastHit = new Map(), lastDead = new Map();
+// World layout (must match the game): villages [x, z, radius] and the three lairs
+const VIL = [[0, 0, 62], [-300, -220, 40], [300, -250, 40], [-280, 260, 40], [330, 280, 40]];
+const LAIR = [[-90, -80], [95, -75], [85, 94]];
+// Give each player their own home rock near a village, as far as possible from everyone else's rock
+function pickRock() {
+  const rocks = [...players.values()].map(p => [p.rx, p.rz]);
+  for (const minD of [160, 120, 80, 40, 0]) {
+    for (let t = 0; t < 300; t++) {
+      const v = VIL[Math.random() * VIL.length | 0], a = Math.random() * 6.283, r = v[2] + 25 + Math.random() * 60;
+      const x = Math.round(v[0] + Math.cos(a) * r), z = Math.round(v[1] + Math.sin(a) * r);
+      if (Math.abs(x) > 470 || Math.abs(z) > 470) continue;
+      if (LAIR.some(l => Math.hypot(x - l[0], z - l[1]) < 30)) continue;
+      if (VIL.some(w => w !== v && Math.hypot(x - w[0], z - w[1]) < w[2] + 10)) continue;
+      if (rocks.every(o => Math.hypot(x - o[0], z - o[1]) >= minD)) return [x, z];
+    }
+  }
+  return [200, 0];
+}
+// World bosses: a different boss rises each night (Pumpkin King, Fenrir, Morgana). Everyone fights them together.
+const BOSSES = [
+  { key: 'pumpkin', n: 'Pumpkin King', base: 3000, per: 1500, speed: 5, keep: 7, trig: 11, r: 11, d: 70, cd: 3, fx: 'stun', sec: 1, howl: 0, msg: 'The PUMPKIN KING rises in the Main Village! Everyone fight him together!' },
+  { key: 'wolf', n: 'Fenrir the Alpha', base: 2500, per: 1200, speed: 9, keep: 4.5, trig: 8, r: 8, d: 90, cd: 1.2, fx: '', sec: 0, howl: 12, msg: 'FENRIR the Alpha Werewolf hunts through the night! Stop him together!' },
+  { key: 'witch', n: 'Morgana the Witch Queen', base: 2200, per: 1000, speed: 3, keep: 20, trig: 35, r: 35, d: 45, cd: 4.5, fx: 'blind', sec: 1.5, howl: 0, msg: 'MORGANA the Witch Queen casts her hexes! Bring her down together!' }
+];
+const boss = { alive: false, x: 0, z: 40, r: 0, hp: 0, mh: 1, cd: 3, howl: 5, cfg: BOSSES[0], hits: new Map() };
+let bossNight = -1;
+const bossEntry = () => ({ id: 0, n: boss.cfg.n, x: boss.x, y: 0, z: boss.z, r: boss.r, c: 'boss', f: boss.cfg.key, s: 0, h: Math.max(0, Math.round(boss.hp)), mh: boss.mh });
+const chatEvent = m => sendAll(JSON.stringify({ t: 'chat', n: 'Event', m }));
+const hurtAll = (r, d, fx, sec) => {
+  for (const p of players.values()) {
+    if (Math.hypot(p.x - boss.x, p.z - boss.z) < r) {
+      const s2 = sockets.get(p.id);
+      if (s2 && s2.readyState === 1) s2.send(JSON.stringify({ t: 'dmg', d, from: boss.cfg.n, fid: 0, c: 'boss', fx, sec }));
+    }
+  }
+};
+function killBoss() {
+  boss.alive = false;
+  let top = null, topD = 0;
+  for (const [pid, dmg] of boss.hits) {
+    if (dmg > topD) { topD = dmg; top = pid; }
+    if (dmg >= 200) { const s2 = sockets.get(pid); if (s2 && s2.readyState === 1) s2.send(JSON.stringify({ t: 'bonus', s: 500, m: boss.cfg.n + ' defeated! +500' })); }
+  }
+  const tp = players.get(top);
+  chatEvent(boss.cfg.n + ' has been defeated!' + (tp ? ' Most damage: ' + tp.n : ''));
+}
+function bossTick(dt) {
+  const c = 60 + (Date.now() - START) / 1000, night = Math.sin(((c % 120) / 120) * Math.PI * 2) <= 0, m = Math.floor(c / 120);
+  if (night && m > 0 && !boss.alive && bossNight !== m && players.size > 0) {
+    const cfg = BOSSES[m % 3 === 1 ? 1 : m % 3 === 2 ? 2 : 0];
+    bossNight = m; boss.cfg = cfg; boss.alive = true; boss.x = 0; boss.z = 40; boss.cd = cfg.cd; boss.howl = cfg.howl || 0; boss.hits.clear();
+    boss.mh = boss.hp = Number(process.env.BOSS_HP) || cfg.base + cfg.per * Math.max(1, players.size);
+    chatEvent(cfg.msg);
+  }
+  if (!night && boss.alive) { boss.alive = false; chatEvent(boss.cfg.n + ' vanishes at dawn...'); }
+  if (!boss.alive) return;
+  const cfg = boss.cfg;
+  let best = null, bd = 260;
+  for (const p of players.values()) { const d = Math.hypot(p.x - boss.x, p.z - boss.z); if (d < bd) { bd = d; best = p; } }
+  if (!best) return;
+  const dx = best.x - boss.x, dz = best.z - boss.z;
+  boss.r = Math.atan2(dx, dz);
+  if (bd > cfg.keep) { boss.x += dx / bd * cfg.speed * dt; boss.z += dz / bd * cfg.speed * dt; }
+  boss.cd -= dt;
+  if (bd < cfg.trig && boss.cd <= 0) { boss.cd = cfg.cd; hurtAll(cfg.r, cfg.d, cfg.fx, cfg.sec); }
+  if (cfg.howl) { boss.howl -= dt; if (boss.howl <= 0) { boss.howl = cfg.howl; hurtAll(40, 15, 'slow', 3); } }
+}
 const team = c => (c === 'civ' || c === 'hunter') ? 'v' : 'm';
 let nextId = 1;
 const num = v => typeof v === 'number' && isFinite(v);
 
 wss.on('connection', ws => {
   const id = nextId++;
-  const me = { id, n: 'Player ' + id, x: 12, y: 0, z: 17, r: 0, c: 'civ', f: 'normal', s: 0, h: 100, mh: 100 };
+  const [rx, rz] = pickRock();
+  const me = { id, n: 'Player ' + id, rx, rz, x: rx + 4, y: 0, z: rz + 4, r: 0, c: 'civ', f: 'normal', s: 0, h: 100, mh: 100, au: 0 };
   players.set(id, me);
   sockets.set(id, ws);
-  ws.send(JSON.stringify({ t: 'hello', id, e: (Date.now() - START) / 1000 }));
+  ws.send(JSON.stringify({ t: 'hello', id, rx, rz, e: (Date.now() - START) / 1000 }));
   ws.on('message', raw => {
     let d; try { d = JSON.parse(raw); } catch (e) { return; }
     if (d.t === 'dead') {
@@ -44,6 +112,17 @@ wss.on('connection', ws => {
       return;
     }
     if (d.t === 'hit') {
+      if (d.to === 0) {
+        if (!boss.alive || !num(d.d)) return;
+        if (Math.hypot(boss.x - me.x, boss.z - me.z) > 45) return;
+        const nowB = Date.now(), logB = (hitLog.get(id) || []).filter(x => nowB - x < 1000);
+        if (logB.length >= 8) return;
+        logB.push(nowB); hitLog.set(id, logB);
+        const dmg = Math.max(1, Math.min(Math.floor(d.d), 250));
+        boss.hp -= dmg; boss.hits.set(id, (boss.hits.get(id) || 0) + dmg);
+        if (boss.hp <= 0) killBoss();
+        return;
+      }
       const t = players.get(d.to);
       if (!t || t === me || !num(d.d) || (team(t.c) === 'v' && team(me.c) === 'v')) return;
       if (Math.hypot(t.x - me.x, t.z - me.z) > 35) return;
@@ -55,12 +134,13 @@ wss.on('connection', ws => {
       return;
     }
     if (d.t !== 's') return;
-    if (num(d.x) && num(d.y) && num(d.z) && num(d.r) && Math.abs(d.x) < 200 && Math.abs(d.z) < 200) {
+    if (num(d.x) && num(d.y) && num(d.z) && num(d.r) && Math.abs(d.x) < 520 && Math.abs(d.z) < 520) {
       me.x = d.x; me.y = Math.max(0, Math.min(d.y, 10)); me.z = d.z; me.r = d.r;
     }
     if (['civ', 'hunter', 'vampire', 'wolf', 'witch'].includes(d.c)) me.c = d.c;
     if (['normal', 'bat', 'human', 'cat'].includes(d.f)) me.f = d.f;
     if (typeof d.n === 'string') { const n = d.n.replace(/[^\w \-]/g, '').trim().slice(0, 14); if (n) me.n = n; }
+    if (Number.isInteger(d.au) && d.au >= 0 && d.au <= 5) me.au = d.au;
     if (num(d.h) && num(d.mh)) { me.h = Math.max(0, Math.min(d.h, 2e6)); me.mh = Math.max(1, Math.min(d.mh, 2e6)); }
     if (num(d.s)) {
       me.s = Math.max(0, Math.min(Math.floor(d.s), 1e6));
@@ -75,7 +155,7 @@ wss.on('connection', ws => {
 });
 
 const sendAll = m => { for (const c of wss.clients) if (c.readyState === 1) c.send(m); };
-setInterval(() => sendAll(JSON.stringify({ t: 'p', list: [...players.values()] })), 100);
+setInterval(() => { bossTick(0.1); sendAll(JSON.stringify({ t: 'p', list: [...players.values(), ...(boss.alive ? [bossEntry()] : [])] })); }, 100);
 setInterval(() => sendAll(JSON.stringify({ t: 'time', e: (Date.now() - START) / 1000 })), 5000);
 setInterval(() => {
   let v = 0, m = 0;
