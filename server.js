@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000, START = Date.now() - (Number(process.env.
 const server = http.createServer((req, res) => {
   if (req.url === '/healthz') { res.writeHead(200); res.end('ok'); return; }
   res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-  res.end(fs.readFileSync(path.join(__dirname, 'public', 'index.html')));
+  res.end(fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8').replace('<!--BRBG_ONLINE-->', '<script>window.BRBG_ONLINE=true</script>'));
 });
 
 const wss = new WebSocketServer({ server, maxPayload: 2048 });
@@ -16,24 +16,20 @@ const players = new Map(), best = new Map(), sockets = new Map(), hitLog = new M
 // World layout (must match the game): villages [x, z, radius] and the three lairs
 const VIL = [[0, 0, 62], [-300, -220, 40], [300, -250, 40], [-280, 260, 40], [330, 280, 40]];
 const LAIR = [[-90, -80], [95, -75], [85, 94]];
-// Give each player their own home rock near a village, as far as possible from everyone else's rock
+// Every player spawns in a village, next to its well, on their own home stone (villages are filled in turn)
+let nextVillage = 0;
 function pickRock() {
-  const rocks = [...players.values()].map(p => [p.rx, p.rz]);
-  for (const minD of [160, 120, 80, 40, 0]) {
-    for (let t = 0; t < 300; t++) {
-      const v = VIL[Math.random() * VIL.length | 0], a = Math.random() * 6.283, r = v[2] + 25 + Math.random() * 60;
-      const x = Math.round(v[0] + Math.cos(a) * r), z = Math.round(v[1] + Math.sin(a) * r);
-      if (Math.abs(x) > 470 || Math.abs(z) > 470) continue;
-      if (LAIR.some(l => Math.hypot(x - l[0], z - l[1]) < 30)) continue;
-      if (VIL.some(w => w !== v && Math.hypot(x - w[0], z - w[1]) < w[2] + 10)) continue;
-      if (rocks.every(o => Math.hypot(x - o[0], z - o[1]) >= minD)) return [x, z];
-    }
+  const v = VIL[nextVillage++ % VIL.length], cx = v[0] + 12, cz = v[1] + 12;
+  const taken = [...players.values()].filter(p => Math.hypot(p.rx - cx, p.rz - cz) < 12).map(p => [p.rx, p.rz]);
+  for (let t = 0; t < 60; t++) {
+    const a = Math.random() * 6.283, x = Math.round(cx + Math.cos(a) * 6.5), z = Math.round(cz + Math.sin(a) * 6.5);
+    if (taken.every(o => Math.hypot(x - o[0], z - o[1]) >= 5)) return [x, z];
   }
-  return [200, 0];
+  return [Math.round(cx + 6.5), Math.round(cz)];
 }
-// World bosses: a different boss rises each night (Pumpkin King, Fenrir, Morgana). Everyone fights them together.
+// World bosses: a different boss rises each night (Bone Colossus, Fenrir, Morgana). Everyone fights them together.
 const BOSSES = [
-  { key: 'pumpkin', n: 'Pumpkin King', base: 3000, per: 1500, speed: 5, keep: 7, trig: 11, r: 11, d: 70, cd: 3, fx: 'stun', sec: 1, howl: 0, msg: 'The PUMPKIN KING rises in the Main Village! Everyone fight him together!' },
+  { key: 'bone', n: 'Bone Colossus', base: 3000, per: 1500, speed: 5, keep: 7, trig: 11, r: 11, d: 70, cd: 3, fx: 'stun', sec: 1, howl: 0, msg: 'The BONE COLOSSUS rises in the Main Village! Everyone fight him together!' },
   { key: 'wolf', n: 'Fenrir the Alpha', base: 2500, per: 1200, speed: 9, keep: 4.5, trig: 8, r: 8, d: 90, cd: 1.2, fx: '', sec: 0, howl: 12, msg: 'FENRIR the Alpha Werewolf hunts through the night! Stop him together!' },
   { key: 'witch', n: 'Morgana the Witch Queen', base: 2200, per: 1000, speed: 3, keep: 20, trig: 35, r: 35, d: 45, cd: 4.5, fx: 'blind', sec: 1.5, howl: 0, msg: 'MORGANA the Witch Queen casts her hexes! Bring her down together!' }
 ];
