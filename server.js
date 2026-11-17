@@ -130,7 +130,7 @@ wss.on('connection', ws => {
       return;
     }
     if (d.t !== 's') return;
-    if (num(d.x) && num(d.y) && num(d.z) && num(d.r) && Math.abs(d.x) < 520 && Math.abs(d.z) < 520) {
+    if (num(d.x) && num(d.y) && num(d.z) && num(d.r) && Math.abs(d.x) < 1120 && Math.abs(d.z) < 1120) {
       me.x = d.x; me.y = Math.max(0, Math.min(d.y, 10)); me.z = d.z; me.r = d.r;
     }
     if (['civ', 'hunter', 'vampire', 'wolf', 'witch'].includes(d.c)) me.c = d.c;
