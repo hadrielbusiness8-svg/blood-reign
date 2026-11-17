@@ -133,7 +133,7 @@ wss.on('connection', ws => {
     if (num(d.x) && num(d.y) && num(d.z) && num(d.r) && Math.abs(d.x) < 1120 && Math.abs(d.z) < 1120) {
       me.x = d.x; me.y = Math.max(0, Math.min(d.y, 10)); me.z = d.z; me.r = d.r;
     }
-    if (['civ', 'hunter', 'vampire', 'wolf', 'witch', 'shader', 'boogeyman', 'discoguy', 'hawkman'].includes(d.c)) me.c = d.c;
+    if (['civ', 'hunter', 'vampire', 'wolf', 'witch', 'shader', 'boogeyman', 'discoguy', 'hawkman', 'reaper', 'drumpler'].includes(d.c)) me.c = d.c;
     if (['normal', 'bat', 'human', 'cat'].includes(d.f)) me.f = d.f;
     if (typeof d.n === 'string') { const n = d.n.replace(/[^\w \-]/g, '').trim().slice(0, 14); if (n) me.n = n; }
     if (Number.isInteger(d.au) && d.au >= 0 && d.au <= 5) me.au = d.au;
