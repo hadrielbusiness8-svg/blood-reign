@@ -398,20 +398,20 @@ const ebolts=[];
 let lvOn=false;
 function clearLvm(){for(let i=vs.length-1;i>=0;i--)if(vs[i].lvm||vs[i].lvciv){if(vs[i].lvciv&&!vs[i].dead)pop--;sc.remove(vs[i].m);vs.splice(i,1)}}
 // villagers that live in the new villages (the first 5 villages already have their own people)
-function spawnCiv(V,k){const hk=k===0,hi=houses.findIndex(h=>h.vx===V.x&&h.vz===V.z),h=houses[hi+(k&3)],g=new T.Group(),legM=M(0x2a2420),bm=M(hk?0x1f4a3a:pal[R()*7|0]),sk=M(skins[R()*4|0]);
+function spawnCiv(V,k,hk,perm){const hi=houses.findIndex(h=>h.vx===V.x&&h.vz===V.z),h=houses[hi+(k&3)],g=new T.Group(),legM=M(0x2a2420),bm=M(hk?0x1f4a3a:pal[R()*7|0]),sk=M(skins[R()*4|0]);
  add(bodyG,bm,0,1.05,0,g);add(headG,sk,0,1.85,0,g);add(new T.SphereGeometry(.235,8,6),M([0x0a0a0a,0x2a1a10,0x4a3020,0x8a8a8a][R()*4|0]),0,1.93,-.03,g).scale.set(1,.75,1);
  [-1,1].forEach(q=>{add(new T.CylinderGeometry(.065,.075,.75,6),bm,q*.38,1.2,0,g);add(new T.SphereGeometry(.07,6,5),sk,q*.38,.8,0,g)});
  if(hk){add(new T.BoxGeometry(.07,1.1,.07),M(0xb8bcc4),.42,1.15,.3,g);add(new T.ConeGeometry(.3,.35,6),M(0x1f4a3a),0,2.08,0,g)}
  const lL=new T.Group(),lR=new T.Group();lL.position.set(-.14,.55,0);lR.position.set(.14,.55,0);g.add(lL,lR);add(legG,legM,0,-.27,0,lL);add(legG,legM,0,-.27,0,lR);
  if(GQ!=='high')g.add(blob());g.userData={lL,lR};g.scale.setScalar(.9+R()*.2);g.position.set(h.dx+(R()-.5)*3,0,h.dz+(R()-.5)*3);g.rotation.y=R()*6.28;sc.add(g);
- const v={m:g,hunter:hk,lvciv:true,vx:V.x,vz:V.z,home:hi+(k&3),blood:100,fear:0,wait:R()*4,dead:false,fall:0,t:R()*9,sp:1.4+R()*1.2};pick(v);vs.push(v);pop++}
+ const v={m:g,hunter:hk,lvciv:!perm,vx:V.x,vz:V.z,home:hi+(k&3),blood:100,fear:0,wait:R()*4,dead:false,fall:0,t:R()*9,sp:1.4+R()*1.2};pick(v);vs.push(v);pop++}
 function spawnLvm(kind,L,x,z){const g=kind==='vampire'?vamp():kind==='wolf'?wolf():kind==='shader'?shaderM():kind==='boogeyman'?boogeyM():kind==='discoguy'?discoM():kind==='hawkman'?hawkM():witch(),pw=1+.25*(L-1);
  g.position.set(x,0,z);g.scale.setScalar(kind==='wolf'?1.25:kind==='boogeyman'||kind==='discoguy'?1.35:1.1);sc.add(g);if(GQ!=='high')g.add(blob());const hp=Math.round(LVHP[kind]*pw);
  const v={m:g,wild:true,lvm:true,kind,pw,home:{x,z},blood:hp,hpMax:hp,fear:0,wait:0,dead:false,fall:0,t:R()*9,sp:LVSP[kind],agg:0,cd:0,cdk:{},tx:x,tz:z,hunter:false,vx:x,vz:z};
  v.bar=wildBar(g);const ch=g.children;ch[ch.length-1].position.y=ch[ch.length-2].position.y=4.4;
  const lb=nameSprite('Lv '+L+' '+LVN[kind]);lb.position.y=5.6;lb.scale.set(3.5,.9,1);g.add(lb);vs.push(v);return v}
 function startLevel(){if(camp.tv<0)camp.tv=VIL.indexOf(nearestVil()[0]);clearLvm();const V=VIL[camp.tv],L=camp.level,cfg=LEVELS[L]||LEVELS[1];
- cfg.mons.forEach((k,i)=>{const a=i*2.1+.6,r=26+R()*8;spawnLvm(k,L,V.x+Math.cos(a)*r,V.z+Math.sin(a)*r)});if(camp.tv>=5)for(let k=0;k<9;k++)spawnCiv(V,k);lvOn=true;saveCamp();
+ cfg.mons.forEach(k=>{let bx=V.x+50,bz=V.z,bd=-1;for(let t=0;t<30;t++){const a=R()*6.283,r=46+R()*16,x=V.x+Math.cos(a)*r,z=V.z+Math.sin(a)*r,d=Math.hypot(x-ROCK.x,z-ROCK.z);if(d>bd){bd=d;bx=x;bz=z}if(d>=70)break}spawnLvm(k,L,bx,bz)});if(camp.tv>=5)for(let k=0;k<8;k++)spawnCiv(V,k,false,false);lvOn=true;saveCamp();
  msg(L>1&&!LEVELS[L]?'Level '+L+': new monsters are coming soon, so the Level 1 fiends return stronger in '+V.t:'Level '+L+' - '+cfg.name+': monsters occupy '+V.t+'! Kill all the monsters and every villager to conquer it.');msgT=6}
 function hitP(v,dmg,fx,sec){const d=dmg*v.pw*(v.beast>0?1.8:1)*(P.titan>0?.4:1);P.hp-=d;P.cause='The '+LVN[v.kind]+' got you';P.shake=.3;if(!(P.titan>0)&&fx){if(fx==='stun')P.stun=sec;else if(fx==='slow')P.slowT=sec;else if(fx==='blind')P.blindT=sec}sfx(110,.12)}
 function aoeM(v,r,dmg,fx,sec){const pos=v.m.position;if(flat(pos,P.m.position)<r&&P.m.position.y<4)hitP(v,dmg,fx,sec);for(const o of vs){if(o.wild||o.dead)continue;if(flat(o.m.position,pos)<r){drain(o,dmg*v.pw*.4);o.fear=4}}}
@@ -739,7 +739,7 @@ function human(){const g=new T.Group(),sk=M(0x6b4430),cl=M(0x4a4a58),lgm=M(0x2a2
 function remodel(){const o=P.m.position.clone(),ry=P.m.rotation.y;sc.remove(P.m);P.m=build();P.m.position.copy(o);P.m.rotation.y=ry;sc.add(P.m)}
 function setForm(f){P.form=f;remodel();msg(f==='bat'?'Bat form':f==='human'?'Human disguise':f==='cat'?'Cat form':P.cls==='witch'?'Witch form':'Vampire form')}
 function toggleForm(f){if(f==='bat'&&isDay){msg('Bat form works only at night');return}if(f==='human'&&!isDay){msg('Human disguise works only in the daytime');return}setForm(P.form===f?'normal':f)}
-function respawn(){P.hp=hpMax();P.form='normal';remodel();P.m.position.set(ROCK.x+4,0,ROCK.z+4);snapCam();clock=60;$('dead').style.display='none';paused=false}
+function respawn(){for(const o of vs)if(o.lvm&&!o.dead&&flat(o.m.position,ROCK)<65){o.m.position.x=o.home.x;o.m.position.z=o.home.z}P.hp=hpMax();P.form='normal';remodel();P.m.position.set(ROCK.x+4,0,ROCK.z+4);snapCam();clock=60;$('dead').style.display='none';paused=false}
 function wolf(){const g=new T.Group(),fur=M(0x4a3a2c),dk=M(0x2a2018),bel=M(0x7a6a58),cl=M(0xeeeeee),ey=M(0xffcc00,0xffaa00);const lL=new T.Group(),lR=new T.Group();lL.position.set(-.3,1.1,0);lR.position.set(.3,1.1,0);g.add(lL,lR);[lL,lR].forEach(l=>{add(new T.BoxGeometry(.42,1.1,.42),fur,0,-.55,0,l);add(new T.BoxGeometry(.5,.3,.7),dk,0,-1,.12,l)});add(new T.BoxGeometry(1.2,1.3,.7),fur,0,1.8,0,g);add(new T.BoxGeometry(.8,.8,.5),bel,0,1.6,.2,g);const h=new T.Group();h.position.set(0,2.8,.2);g.add(h);add(new T.SphereGeometry(.38,12,10),fur,0,0,0,h);add(new T.BoxGeometry(.28,.24,.5),fur,0,-.1,.4,h);add(new T.BoxGeometry(.1,.08,.1),dk,0,0,.66,h);[-.22,.22].forEach(x=>{add(new T.ConeGeometry(.1,.3,4),dk,x,.38,-.05,h);add(new T.SphereGeometry(.05,8,8),ey,x*.7,.1,.33,h)});const tail=add(new T.BoxGeometry(.2,.2,.9),fur,0,1.2,-.7,g);tail.rotation.x=-.5;const a=[-1,1].map(s=>{const q=new T.Group();q.position.set(s*.8,2.3,0);g.add(q);add(new T.BoxGeometry(.3,1.3,.3),fur,0,-.65,0,q);[-.08,0,.08].forEach(x=>add(new T.ConeGeometry(.04,.25,4),cl,x,-1.4,.05,q).rotation.x=Math.PI);return q});g.userData={lL,lR,aL:a[0],aR:a[1]};return g}
 const CL={vampire:{n:'Vampire',bar:'Blood',hp:1000,en:10000,hint:'WASD move · Space jump · K bite · Shift dash · E Bat (night) · Q Human (day) · F Drain · R Speed · T Shadow · G Blast · Z Nova · X Chains · C Lord (full Blood)',l:['Bite','Bat','Human','Drain','Speed','Shadow','Blast','Nova','Chains','Lord']},wolf:{n:'Werewolf',bar:'Rage',hp:550,en:100000,hint:'WASD move · Space jump · K claw · E Claws mode · Q Beast · F Leap · R Regen · T Roar · Z Pounce · X Frenzy · C Titan (full Rage) · Shift dash',l:['Claw','Claws','Beast','Leap','Regen','Roar','','Pounce','Frenzy','Titan']},witch:{n:'Witch',bar:'Magic',hp:100,en:1000,hint:'WASD move · Space jump · Shift dash · E Infect · Q Blind · F Cat form · Z Hex Bolt · X Plague Storm · C Coven Storm (full Magic)',l:['','Infect','Blind','Cat','','','','Hex','Plague','Storm']},civ:{n:'Civilian',bar:'Villager',hp:100,en:1000,hint:'WASD move · Space jump · Shift dash · E talk (at the cult altar or to a hunter)',l:['','Talk','','']},hunter:{n:'Hunter',bar:'Hunter',hp:100,en:1000,hint:'WASD move · Space jump · K sword · Shift dash',l:['Sword','','','']}};
 function setClass(c){const o=P.m.position.clone(),ry=P.m.rotation.y;sc.remove(P.m);P.cls=c;P.form='normal';P.full=false;P.cm=false;P.tier=1;S.claws=S.spells=S.kills=S.candy=0;P.m=build();P.m.position.set(c==='civ'||c==='hunter'?o.x:HOME[c].x,0,c==='civ'||c==='hunter'?o.z:HOME[c].z);P.m.rotation.y=ry;sc.add(P.m);P.hp=hpMax();P.taste=100;
@@ -782,6 +782,8 @@ for(let i=0;i<NV;i++){
  if(GQ!=='high')g.add(blob());g.userData={lL,lR};g.scale.setScalar(.9+R()*.2);g.position.set(h.dx+(R()-.5)*3,0,h.dz+(R()-.5)*3);g.rotation.y=R()*6.28;sc.add(g);
  const v={m:g,hunter:i%10===0,vx:h.vx,vz:h.vz,home:i>>2,blood:100,fear:0,wait:R()*4,dead:false,fall:0,t:R()*9,sp:1.4+R()*1.2};pick(v);vs.push(v)}
 
+// two hunters live in every one of the 95 new villages for good
+for(let i=5;i<VIL.length;i++){spawnCiv(VIL[i],0,true,true);spawnCiv(VIL[i],1,true,true)}
 // controls
 const keys={},joy={x:0,y:0};let msgT=0;
 function msg(s){$('msg').textContent=s;msgT=1;sfx(/hit|slain|raider/i.test(s)?110:300,.1)}
