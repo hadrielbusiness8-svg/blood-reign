@@ -219,7 +219,7 @@ function runIntro(){const st=['i1','i2','i2b','i3'];let i=-1,tm=null;
 function begin(){if($('intro').style.display==='none')return;myName=($('nm').value||'').trim().slice(0,14)||'Player';try{localStorage.setItem('brbg_name',myName)}catch(e){}$('intro').style.display='none';started=true;const resumed=applySave();startLevel();snapCam();paused=false;sfx(500,.2);if(musicOn)startMusic();showTut();msg(resumed?'Welcome back, '+myName+'! Your progress was restored.':'You wake up in a village under siege! Monsters occupy it. Choose your path at the cult altar (E) or join the Hunters, then conquer it.');msgT=6}
 // new powers
 const nv=r=>near(r).sort((a,b)=>flat(a.m.position,P.m.position)-flat(b.m.position,P.m.position))[0];
-const rings=[],mul=()=>(P.lord>0?2:1)*(P.titan>0?1.5:1)*((bloodMoon&&P.cls!=='civ'&&P.cls!=='hunter')?1.25:1)*(1+.04*(level-1))*(1+.08*upg.dmg);
+const rings=[],mul=()=>(P.lord>0?2:1)*(P.titan>0?1.5:1)*((bloodMoon&&P.cls!=='civ'&&P.cls!=='hunter')?1.25:1)*(1+.04*(level-1))*(1+.08*upg.dmg)*((CL[P.cls]&&CL[P.cls].pw)||1);
 function ring(color,r){const m=new T.Mesh(new T.RingGeometry(.8,1,32),new T.MeshBasicMaterial({color,transparent:true,opacity:.8,side:T.DoubleSide}));m.rotation.x=-Math.PI/2;m.position.set(P.m.position.x,.3,P.m.position.z);sc.add(m);rings.push({m,t:0,r})}
 function aoe(r,d,fx,sec){const dm=d*mul();near(r).forEach(v=>{drain(v,dm);v.fear=6;if(fx==='stun')v.stun=sec});if(typeof pvpHit==='function')pvpHit(r,d,fx,sec)}
 function fireBolt(color,dmg,fx,sec){const r=P.m.rotation.y,dx=Math.sin(r),dz=Math.cos(r),m=new T.Mesh(new T.SphereGeometry(.4,10,8),new T.MeshBasicMaterial({color}));m.position.set(P.m.position.x+dx*1.5,P.m.position.y+1.8,P.m.position.z+dz*1.5);sc.add(m);bolts.push({m,dx,dz,life:1.4,dmg,fx,sec});sfx(240,.15)}
@@ -610,15 +610,15 @@ function checkOb(){const t=P.tier||1;let o=null;
  $('ob').textContent=o?'Mission: '+o[0]+' '+o[1]+' / '+o[2]+' · Score '+score:(P.cls==='civ'?'Mission: find the cult altar or a hunter':'');
  if(o&&o[1]>=o[2]){score+=100*t;P.tier=t+1;msg('Mission complete! +'+100*t)}}
 // the village cult
-const CULTS=VIL.slice(0,5).map(V=>({x:V.x+36,z:V.z-12}));let CULT=CULTS[0];
+const CULTS=VIL.map(V=>({x:V.x+36,z:V.z-12}));let CULT=CULTS[0];
 for(const CU of CULTS){CULT=CU;(function(){const g=new T.Group();g.position.set(CULT.x,0,CULT.z);sc.add(g);
  add(new T.CylinderGeometry(6,6.4,.4,24),M(0x1a1220),0,.2,0,g);
  add(new T.RingGeometry(3.6,4,32),new T.MeshBasicMaterial({color:0xb05cf0,side:T.DoubleSide}),0,.45,0,g).rotation.x=-Math.PI/2;
- for(let i=0;i<6;i++){const a=i/6*6.283;add(new T.CylinderGeometry(.35,.45,6,8),M(0x2a2030),Math.cos(a)*5.2,3.2,Math.sin(a)*5.2,g)}
+ for(let i=0;i<(CULTS.indexOf(CU)<5?6:0);i++){const a=i/6*6.283;add(new T.CylinderGeometry(.35,.45,6,8),M(0x2a2030),Math.cos(a)*5.2,3.2,Math.sin(a)*5.2,g)}
  add(new T.BoxGeometry(2,1.2,1.2),M(0x15101a),0,1,0,g);add(new T.SphereGeometry(.5,12,10),M(0xb05cf0,0xb05cf0),0,2.3,0,g);
- const l=new T.PointLight(0xb05cf0,1.6,28);l.position.set(CULT.x,4,CULT.z);sc.add(l);obs.push({x:CULT.x,z:CULT.z,r:1.8})})()}CULT=CULTS[0];
+ if(CULTS.indexOf(CU)<5){const l=new T.PointLight(0xb05cf0,1.6,28);l.position.set(CULT.x,4,CULT.z);sc.add(l)}obs.push({x:CULT.x,z:CULT.z,r:1.8})})()}CULT=CULTS[0];
 function nearHunter(){for(const v of vs)if(v.hunter&&!v.dead&&flat(v.m.position,P.m.position)<4)return v;return null}
-function interact(){if(P.cls!=='civ')return;if(CULTS.some(c=>flat(P.m.position,c)<6)){paused=true;$('sel').style.display='flex'}else if(nearHunter())setClass('hunter');else if(!trickTreat())msg('No one to talk to here')}
+function interact(){if(P.cls!=='civ')return;if(CULTS.some(c=>flat(P.m.position,c)<6)){refreshCult();paused=true;$('sel').style.display='flex'}else if(nearHunter())setClass('hunter');else if(!trickTreat())msg('No one to talk to here')}
 function closeCult(){paused=false;$('sel').style.display='none'}
 function showPrompt(){let t='';if(P.cls==='civ'){if(CULTS.some(c=>flat(P.m.position,c)<6))t='Press E: speak at the cult altar';else if(nearHunter())t='Press E: tell the hunter you want to join';else if(nearDoor()>=0)t='Press E: trick or treat!'}$('pr').textContent=t}
 function hunterM(){const g=human();add(new T.BoxGeometry(.07,1.1,.07),M(0xb8bcc4),0,-1,.3,g.userData.aR);g.children.forEach(c=>{if(c.geometry&&c.geometry.type==='CylinderGeometry')c.material=M(0x1f4a3a)});return g}
@@ -724,12 +724,12 @@ const enMax=()=>P.full?1e6:CL[P.cls].en,hpMax=()=>((P.full?1000:CL[P.cls].hp)+(P
 function witch(){const g=new T.Group(),rb=M(0x3a1a5a),sk=M(0x8a5a3a),hat=M(0x15101a),lg=M(0x1a1220);const lL=new T.Group(),lR=new T.Group();lL.position.set(-.15,.6,0);lR.position.set(.15,.6,0);g.add(lL,lR);[lL,lR].forEach(l=>add(new T.BoxGeometry(.2,.6,.2),lg,0,-.3,0,l));add(new T.ConeGeometry(.75,1.8,10),rb,0,1.2,0,g);add(new T.SphereGeometry(.25,10,8),sk,0,2.25,0,g);add(new T.CylinderGeometry(.5,.5,.06,12),hat,0,2.45,0,g);add(new T.ConeGeometry(.28,.8,8),hat,0,2.9,0,g);const a=[-1,1].map(s=>{const q=new T.Group();q.position.set(s*.45,1.9,0);g.add(q);add(new T.BoxGeometry(.16,.8,.16),rb,0,-.4,0,q);return q});g.userData={lL,lR,aL:a[0],aR:a[1]};return g}
 function cat(){const g=new T.Group(),f=M(0x22202a),ey=M(0x66ff66,0x22aa22);add(new T.BoxGeometry(.4,.36,.9),f,0,.5,0,g);add(new T.SphereGeometry(.22,10,8),f,0,.68,.55,g);[-.12,.12].forEach(x=>{add(new T.ConeGeometry(.07,.2,4),f,x,.9,.55,g);add(new T.SphereGeometry(.035,6,6),ey,x,.72,.75,g)});add(new T.BoxGeometry(.08,.08,.7),f,0,.75,-.7,g).rotation.x=.6;const lL=new T.Group(),lR=new T.Group();lL.position.set(0,.3,.3);lR.position.set(0,.3,-.3);g.add(lL,lR);[lL,lR].forEach(l=>add(new T.BoxGeometry(.5,.3,.12),f,0,-.12,0,l));g.userData={lL,lR,aL:new T.Group(),aR:new T.Group()};return g}
 function build(){const m=build0();if(GQ!=='high'&&P.form!=='bat'){const b=blob();b.scale.setScalar(1.3);m.add(b)}addAura(m,auraSel);return m}
-function build0(){if(P.cls==='civ')return human();if(P.cls==='hunter')return hunterM();if(P.cls==='wolf')return wolf();if(P.cls==='witch')return P.form==='cat'?cat():witch();return P.form==='bat'?bat():P.form==='human'?human():vamp()}
+function build0(){if(MCL[P.cls])return({shader:shaderM,boogeyman:boogeyM,discoguy:discoM,hawkman:hawkM})[P.cls]();if(P.cls==='civ')return human();if(P.cls==='hunter')return hunterM();if(P.cls==='wolf')return wolf();if(P.cls==='witch')return P.form==='cat'?cat():witch();return P.form==='bat'?bat():P.form==='human'?human():vamp()}
 function spell(t,cost){if(P.form==='cat'){msg('Change back from the cat first');return}let best=null,bd=14;for(const v of vs)if(!v.dead){const d=flat(v.m.position,P.m.position);if(d<bd){bd=d;best=v}}
  if(!best){msg('No target close enough');return}if(P.bl<cost){msg('Not enough Magic');return}
  P.bl-=cost;P.atk=.4;S.spells++;P.m.rotation.y=Math.atan2(best.m.position.x-P.m.position.x,best.m.position.z-P.m.position.z);
  if(t==='infect'){best.inf=5;msg('Infected for 5 seconds')}else{best.blind=5;msg('Blinded for 5 seconds')}}
-function power2(k){if(P.cls==='civ'||P.cls==='hunter'){if(k==='e')interact();return}if(P.cls==='wolf'){if(k==='e'){P.cm=!P.cm;msg(P.cm?'Claws mode ON':'Claws mode OFF');return}wpower(k);return}
+function power2(k){if(MCL[P.cls])return mpower(k);if(P.cls==='civ'||P.cls==='hunter'){if(k==='e')interact();return}if(P.cls==='wolf'){if(k==='e'){P.cm=!P.cm;msg(P.cm?'Claws mode ON':'Claws mode OFF');return}wpower(k);return}
  if(k==='e')spell('infect',30);else if(k==='q')spell('blind',20);else if(k==='f')setForm(P.form==='cat'?'normal':'cat');else wipower(k)}
 const NC=new T.Color(0x0b0814),DC=new T.Color(0x7fa6d8),NA=new T.Color(0x50507a),DA=new T.Color(0xffffff);
 const sun=new T.Mesh(new T.SphereGeometry(6,16,12),new T.MeshBasicMaterial({color:0xfff0b0}));sun.position.set(40,45,-100);sun.visible=false;sc.add(sun);
@@ -742,7 +742,43 @@ function toggleForm(f){if(f==='bat'&&isDay){msg('Bat form works only at night');
 function respawn(){for(const o of vs)if(o.lvm&&!o.dead&&flat(o.m.position,ROCK)<65){o.m.position.x=o.home.x;o.m.position.z=o.home.z}P.hp=hpMax();P.form='normal';remodel();P.m.position.set(ROCK.x+4,0,ROCK.z+4);snapCam();clock=60;$('dead').style.display='none';paused=false}
 function wolf(){const g=new T.Group(),fur=M(0x4a3a2c),dk=M(0x2a2018),bel=M(0x7a6a58),cl=M(0xeeeeee),ey=M(0xffcc00,0xffaa00);const lL=new T.Group(),lR=new T.Group();lL.position.set(-.3,1.1,0);lR.position.set(.3,1.1,0);g.add(lL,lR);[lL,lR].forEach(l=>{add(new T.BoxGeometry(.42,1.1,.42),fur,0,-.55,0,l);add(new T.BoxGeometry(.5,.3,.7),dk,0,-1,.12,l)});add(new T.BoxGeometry(1.2,1.3,.7),fur,0,1.8,0,g);add(new T.BoxGeometry(.8,.8,.5),bel,0,1.6,.2,g);const h=new T.Group();h.position.set(0,2.8,.2);g.add(h);add(new T.SphereGeometry(.38,12,10),fur,0,0,0,h);add(new T.BoxGeometry(.28,.24,.5),fur,0,-.1,.4,h);add(new T.BoxGeometry(.1,.08,.1),dk,0,0,.66,h);[-.22,.22].forEach(x=>{add(new T.ConeGeometry(.1,.3,4),dk,x,.38,-.05,h);add(new T.SphereGeometry(.05,8,8),ey,x*.7,.1,.33,h)});const tail=add(new T.BoxGeometry(.2,.2,.9),fur,0,1.2,-.7,g);tail.rotation.x=-.5;const a=[-1,1].map(s=>{const q=new T.Group();q.position.set(s*.8,2.3,0);g.add(q);add(new T.BoxGeometry(.3,1.3,.3),fur,0,-.65,0,q);[-.08,0,.08].forEach(x=>add(new T.ConeGeometry(.04,.25,4),cl,x,-1.4,.05,q).rotation.x=Math.PI);return q});g.userData={lL,lR,aL:a[0],aR:a[1]};return g}
 const CL={vampire:{n:'Vampire',bar:'Blood',hp:1000,en:10000,hint:'WASD move · Space jump · K bite · Shift dash · E Bat (night) · Q Human (day) · F Drain · R Speed · T Shadow · G Blast · Z Nova · X Chains · C Lord (full Blood)',l:['Bite','Bat','Human','Drain','Speed','Shadow','Blast','Nova','Chains','Lord']},wolf:{n:'Werewolf',bar:'Rage',hp:550,en:100000,hint:'WASD move · Space jump · K claw · E Claws mode · Q Beast · F Leap · R Regen · T Roar · Z Pounce · X Frenzy · C Titan (full Rage) · Shift dash',l:['Claw','Claws','Beast','Leap','Regen','Roar','','Pounce','Frenzy','Titan']},witch:{n:'Witch',bar:'Magic',hp:100,en:1000,hint:'WASD move · Space jump · Shift dash · E Infect · Q Blind · F Cat form · Z Hex Bolt · X Plague Storm · C Coven Storm (full Magic)',l:['','Infect','Blind','Cat','','','','Hex','Plague','Storm']},civ:{n:'Civilian',bar:'Villager',hp:100,en:1000,hint:'WASD move · Space jump · Shift dash · E talk (at the cult altar or to a hunter)',l:['','Talk','','']},hunter:{n:'Hunter',bar:'Hunter',hp:100,en:1000,hint:'WASD move · Space jump · K sword · Shift dash',l:['Sword','','','']}};
-function setClass(c){const o=P.m.position.clone(),ry=P.m.rotation.y;sc.remove(P.m);P.cls=c;P.form='normal';P.full=false;P.cm=false;P.tier=1;S.claws=S.spells=S.kills=S.candy=0;P.m=build();P.m.position.set(c==='civ'||c==='hunter'?o.x:HOME[c].x,0,c==='civ'||c==='hunter'?o.z:HOME[c].z);P.m.rotation.y=ry;sc.add(P.m);P.hp=hpMax();P.taste=100;
+// ===== playable level monsters: unlocked by campaign level, and the higher the level the stronger they are =====
+const MCL={shader:{lv:2},boogeyman:{lv:2},discoguy:{lv:3},hawkman:{lv:3}};
+Object.assign(CL,{
+ shader:{n:'Shader',bar:'Shadow',hp:1500,en:100000,pw:1.3,hint:'WASD move · Space jump · K slash · E Shadow Bolt · Q Blink · F Gloom · R Void · Shift dash',l:['Slash','Bolt','Blink','Gloom','Void']},
+ boogeyman:{n:'Boogeyman',bar:'Dread',hp:2200,en:100000,pw:1.6,hint:'WASD move · Space jump · K swipe · E Slam · Q Lunge · F Fear · R Rage · Shift dash',l:['Swipe','Slam','Lunge','Fear','Rage']},
+ discoguy:{n:'Discoguy',bar:'Groove',hp:3000,en:100000,pw:1.9,hint:'WASD move · Space jump · K kick · E Light Beam · Q Dance Floor · F Strobe · R Disco Fever · Shift dash',l:['Kick','Beam','Floor','Strobe','Fever']},
+ hawkman:{n:'Hawkman',bar:'Wind',hp:2600,en:100000,pw:1.8,hint:'WASD move · Space jump · K talon · E Feather · Q Dive · F Gust · R Tailwind · Shift dash',l:['Talon','Feather','Dive','Gust','Wind']}});
+const MPR={shader:[40,3.6,1],boogeyman:[55,3.9,1.1],discoguy:[55,3.6,1],hawkman:[50,3.6,.8]};
+function mprim(){if(P.cd>0||P.en<300)return;const [d,r,cd]=MPR[P.cls],a=near(r),pv=pvpTargets(r);if(!a.length&&!pv.length){msg('No one close enough');return}
+ P.en-=300;P.cd=cd*(P.frenzy>0?.5:1);P.atk=.4;if(a.length)P.m.rotation.y=Math.atan2(a[0].m.position.x-P.m.position.x,a[0].m.position.z-P.m.position.z);
+ a.forEach(v=>drain(v,d*mul()));if(pv.length)pvpHit(r,d);near(14).forEach(v=>v.fear=6)}
+function mpower(k){const c=P.cls,disc=[0xff2a8a,0x2affd0,0xffe02a,0x2a6aff];
+ if(c==='shader'){
+  if(k==='e'&&can('e',1500,2.4))fireBolt(0x6a3cff,40,'blind',1.5);
+  else if(k==='q'&&can('q',2000,7)){const r=P.m.rotation.y;P.m.position.x+=Math.sin(r)*14;P.m.position.z+=Math.cos(r)*14;ring(0x6a3cff,6);msg('BLINK')}
+  else if(k==='f'&&can('f',3000,10)){aoe(14,20,'blind',3);ring(0x1a1030,14);msg('GLOOM')}
+  else if(k==='r'&&can('r',4000,13)){aoe(9,55,'slow',2.5);P.shake=.5;ring(0x6a3cff,9);msg('VOID')}
+ }else if(c==='boogeyman'){
+  if(k==='e'&&can('e',3000,8)){aoe(8,45,'stun',1.5);P.shake=.7;ring(0x884422,8);msg('SLAM')}
+  else if(k==='q'&&P.m.position.y<.5&&can('q',2000,6)){P.vy=14;P.dash=.45;aoe(5,60);msg('LUNGE')}
+  else if(k==='f'&&can('f',3000,14)){aoe(18,15,'slow',3.5);ring(0x222222,18);msg('FEAR')}
+  else if(k==='r'&&can('r',6000,30)){P.beast=8;msg('ENRAGED')}
+ }else if(c==='discoguy'){
+  if(k==='e'&&can('e',1500,2.2))fireBolt(disc[Math.floor(R()*4)],38,'blind',1.5);
+  else if(k==='q'&&can('q',3000,11)){aoe(14,30,'stun',1.5);ring(0xff2a8a,14);P.shake=.5;msg('DANCE FLOOR')}
+  else if(k==='f'&&can('f',3000,15)){aoe(20,15,'blind',3);ring(0xffe02a,20);msg('STROBE')}
+  else if(k==='r'&&can('r',6000,25)){P.frenzy=8;msg('DISCO FEVER')}
+ }else if(c==='hawkman'){
+  if(k==='e'&&can('e',1500,2))fireBolt(0xe8c070,32);
+  else if(k==='q'&&P.m.position.y<.5&&can('q',2500,8)){P.vy=18;P.dash=.6;aoe(6,65);msg('DIVE')}
+  else if(k==='f'&&can('f',3000,12)){aoe(12,20,'slow',3);ring(0xe8c070,12);P.shake=.4;msg('GUST')}
+  else if(k==='r'&&can('r',4000,20)){P.spd=6;msg('TAILWIND: 3x speed')}}}
+const UNL={};
+function pickClass(c){const m=MCL[c];if(m&&level<m.lv){msg('Reach Level '+m.lv+' to become a '+CL[c].n);return}setClass(c)}
+function refreshCult(){const box=document.querySelector('#sel .cards');for(const c in MCL){let d=document.getElementById('cm_'+c);if(!d){d=document.createElement('div');d.className='cd';d.id='cm_'+c;box.appendChild(d)}
+ const k=CL[c],ok=level>=MCL[c].lv;d.style.opacity=ok?1:.45;d.innerHTML='<h3>'+k.n+' <small>(Level '+MCL[c].lv+' monster)</small></h3><p>HP '+k.hp+' · Power x'+k.pw+'</p><p>'+k.l.map((x,i)=>['K','E','Q','F','R'][i]+' '+x).join(' · ')+'</p><button onclick="pickClass(\''+c+'\')">'+(ok?'Become a '+k.n+' ('+({shader:4,boogeyman:5,discoguy:6,hawkman:7})[c]+')':'Unlocks at Level '+MCL[c].lv)+'</button>'}}
+function setClass(c){const o=P.m.position.clone(),ry=P.m.rotation.y;sc.remove(P.m);P.cls=c;P.form='normal';P.full=false;P.cm=false;P.tier=1;S.claws=S.spells=S.kills=S.candy=0;P.m=build();P.m.position.set(c==='civ'||c==='hunter'||!HOME[c]?o.x:HOME[c].x,0,c==='civ'||c==='hunter'||!HOME[c]?o.z:HOME[c].z);P.m.rotation.y=ry;sc.add(P.m);P.hp=hpMax();P.taste=100;
  Object.assign(P,{bl:c==='witch'?100:0,en:enMax(),vy:0,fly:0,frenzy:0,slam:0,atk:0,dash:0,c:{e:0,q:0,f:0}});
  const k=CL[c];$('cn').textContent=k.n+' · '+k.bar;$('hint').textContent=k.hint+' · B menu · M map';['tb','te','tq','tf','tr','tt','tg','tz','tx','tc'].forEach((id,i)=>{$(id).textContent=k.l[i]||'';$(id).style.display=k.l[i]?'':'none'});
  $('sel').style.display='none';paused=false;buildSkills();if(c!=='civ')msg('You became a '+CL[c].n);saveState()}
@@ -753,7 +789,7 @@ function can(k,cost,cd){if(P.c[k]>0||P.en<cost)return false;P.en-=cost;P.c[k]=cd
 function claw(){if(P.cd>0||P.en<400)return;const a=near(P.cm?3.8:3);if(!a.length){msg('No one close enough');return}
  P.en-=400;P.cd=P.frenzy>0?.25:.6;P.atk=.4;P.m.rotation.y=Math.atan2(a[0].m.position.x-P.m.position.x,a[0].m.position.z-P.m.position.z);
  a.forEach(v=>drain(v,(P.cm?60:20)*(P.beast>0?2:1)*(P.frenzy>0?1.5:1)*mul()));S.claws+=a.length;near(14).forEach(v=>v.fear=6);P.bl=Math.min(100,P.bl+10*a.length);msg((P.cm?'Claws x':'Strike x')+a.length)}
-function primary(){if(P.stun>0)return;if(P.cls==='civ'){msg('Civilians cannot fight. Press E at the cult to become a monster, or tell a Hunter.');return}if(P.cls==='wolf')claw();else if(P.cls==='vampire')bite();else if(P.cls==='hunter'&&P.cd<=0){P.cd=.6;P.atk=.4;let hit=0;for(const o of mons.slice())if(flat(o.m.position,P.m.position)<3.4){hitMon(o,100,true);hit++}for(const w of near(3.4))if(w.wild){drain(w,100);hit++}if(!hit)msg('Sword swing')}}
+function primary(){if(P.stun>0)return;if(P.cls==='civ'){msg('Civilians cannot fight. Press E at the cult to become a monster, or tell a Hunter.');return}if(MCL[P.cls])mprim();else if(P.cls==='wolf')claw();else if(P.cls==='vampire')bite();else if(P.cls==='hunter'&&P.cd<=0){P.cd=.6;P.atk=.4;let hit=0;for(const o of mons.slice())if(flat(o.m.position,P.m.position)<3.4){hitMon(o,100,true);hit++}for(const w of near(3.4))if(w.wild){drain(w,100);hit++}if(!hit)msg('Sword swing')}}
 function power(k){if(P.stun>0)return;if(P.cls!=='vampire')return power2(k);
  if(P.cls==='vampire'){
   if(k==='e')return toggleForm('bat');
@@ -801,7 +837,7 @@ function bite(){
 function dash(){if(P.dcd>0||P.en<300)return;P.en-=300;P.dcd=1.5;P.dash=.18}
 function jump(){if(P.m.position.y<=.001)P.vy=9}
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();if(keys[k])return;keys[k]=1;
- if(k==='m')toggleMap();if(k==='n')toggleMusic();if(k==='b'&&$('intro').style.display==='none')($('menu').style.display==='flex'?closeMenu():openMenu('shop'));if(k==='escape')closeMenu();if(paused){if($('sel').style.display==='flex'){if(k==='1')setClass('vampire');if(k==='2')setClass('wolf');if(k==='3')setClass('witch');if(k==='escape')closeCult()}return}if(k===' ')jump();if(k==='k'||k==='j')primary();if(k==='shift')dash();if(k.length===1&&'eqfrtgzxc'.includes(k))power(k)});
+ if(k==='m')toggleMap();if(k==='n')toggleMusic();if(k==='b'&&$('intro').style.display==='none')($('menu').style.display==='flex'?closeMenu():openMenu('shop'));if(k==='escape')closeMenu();if(paused){if($('sel').style.display==='flex'){if(k==='1')setClass('vampire');if(k==='2')setClass('wolf');if(k==='3')setClass('witch');if(k==='4')pickClass('shader');if(k==='5')pickClass('boogeyman');if(k==='6')pickClass('discoguy');if(k==='7')pickClass('hawkman');if(k==='escape')closeCult()}return}if(k===' ')jump();if(k==='k'||k==='j')primary();if(k==='shift')dash();if(k.length===1&&'eqfrtgzxc'.includes(k))power(k)});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=0});
 $('tb').onpointerdown=primary;$('td').onpointerdown=dash;$('tj').onpointerdown=jump;$('te').onpointerdown=()=>power('e');$('tq').onpointerdown=()=>power('q');$('tf').onpointerdown=()=>power('f');$('tr').onpointerdown=()=>power('r');$('tt').onpointerdown=()=>power('t');$('tg').onpointerdown=()=>power('g');$('tz').onpointerdown=()=>power('z');$('tx').onpointerdown=()=>power('x');$('tc').onpointerdown=()=>power('c');
 const jy=$('joy'),kn=$('knob');
@@ -815,7 +851,7 @@ function step(dt){
  // player
  const ix0=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0)+joy.x,iz0=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0)+joy.y,cy=Math.cos(camYaw),sy=Math.sin(camYaw),ix=ix0*cy+iz0*sy,iz=-ix0*sy+iz0*cy;
  const l=P.stun>0?0:Math.hypot(ix,iz),p=P.m.position,u=P.m.userData;P.mv=l>.1?1:0;
- if(l>.1){if(P.atk<=0)P.m.rotation.y=Math.atan2(ix,iz);const spd=(P.cls==='wolf'?(P.full?30:10):8)*(P.form==='bat'?1.8:1)*(P.frenzy>0?1.5:1)*(P.spd>0?3:1)*(P.slowT>0?.4:1)*(P.lord>0?1.4:1)*(1+.04*upg.spd);p.x+=ix/Math.max(l,1)*spd*dt;p.z+=iz/Math.max(l,1)*spd*dt}
+ if(l>.1){if(P.atk<=0)P.m.rotation.y=Math.atan2(ix,iz);const spd=(P.cls==='wolf'?(P.full?30:10):P.cls==='hawkman'?11:P.cls==='shader'?9:8)*(P.form==='bat'?1.8:1)*(P.frenzy>0?1.5:1)*(P.spd>0?3:1)*(P.slowT>0?.4:1)*(P.lord>0?1.4:1)*(1+.04*upg.spd);p.x+=ix/Math.max(l,1)*spd*dt;p.z+=iz/Math.max(l,1)*spd*dt}
  if(P.dash>0){P.dash-=dt;p.x+=Math.sin(P.m.rotation.y)*25*dt;p.z+=Math.cos(P.m.rotation.y)*25*dt}
  if(P.form==='bat'){p.y+=(6-p.y)*Math.min(1,dt*4);P.vy=0}else{P.vy-=25*dt;p.y=Math.max(0,p.y+P.vy*dt);if(p.y===0&&P.vy<0)P.vy=0}
  if(P.slam===1&&p.y>1)P.slam=2;
@@ -829,7 +865,7 @@ function step(dt){
   if(v.dead){v.fall=Math.min(1,v.fall+dt*2);m.rotation.x=-v.fall*Math.PI/2;m.position.y=v.fall*.25;
    if(v.t>0&&(v.rm=(v.rm||0)+dt)>10){sc.remove(m);v.gone=true}continue}
   let dx=0,dz=0,sp=0;
-  const mon=(P.cls==='vampire'&&P.form!=='human')||P.cls==='wolf'||(P.cls==='witch'&&P.form!=='cat'),hc=v.hunter&&mon&&!(P.inv>0)&&!(v.blind>0)&&p.y<2.5&&flat(m.position,p)<20;
+  const mon=(P.cls==='vampire'&&P.form!=='human')||P.cls==='wolf'||!!MCL[P.cls]||(P.cls==='witch'&&P.form!=='cat'),hc=v.hunter&&mon&&!(P.inv>0)&&!(v.blind>0)&&p.y<2.5&&flat(m.position,p)<20;
   const tmn=v.hunter&&!hc?nearMon(m.position,18):null;if(v.hunter)v.fear=0;if(v.inf>0){v.inf-=dt;v.itk=(v.itk||0)+dt;if(v.itk>=1){v.itk-=1;drain(v,1)}}if(v.blind>0)v.blind-=dt;
   v.flash-=dt;m.children[0].material.emissive.setHex(v.flash>0?0xcc3322:v.inf>0?0x00aa22:v.blind>0?0x555555:0);
   if(v.stun>0){v.stun-=dt}
@@ -862,7 +898,7 @@ P.m.scale.setScalar((P.cls==='wolf'?(P.beast>0?1.8:P.full?1.5:1.2):P.form==='bat
 // ---- online ----
 const others={};let ws=null,myId=0,sendT=0,online=0;
 function tag(name){const c=document.createElement('canvas');c.width=256;c.height=64;const x=c.getContext('2d');x.font='bold 34px Georgia';x.textAlign='center';x.fillStyle='#fff';x.strokeStyle='#000';x.lineWidth=6;x.strokeText(name,128,44);x.fillText(name,128,44);const sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(c),depthTest:false}));sp.scale.set(4,1,1);sp.position.y=3.6;return sp}
-function modelFor(c,f){if(c==='boss')return f==='wolf'?bossWolf():f==='witch'?bossWitch():bossModel();if(c==='civ')return human();if(c==='hunter')return hunterM();if(c==='wolf')return wolf();if(c==='witch')return f==='cat'?cat():witch();return f==='bat'?bat():f==='human'?human():vamp()}
+function modelFor(c,f){if(c==='shader')return shaderM();if(c==='boogeyman')return boogeyM();if(c==='discoguy')return discoM();if(c==='hawkman')return hawkM();if(c==='boss')return f==='wolf'?bossWolf():f==='witch'?bossWitch():bossModel();if(c==='civ')return human();if(c==='hunter')return hunterM();if(c==='wolf')return wolf();if(c==='witch')return f==='cat'?cat():witch();return f==='bat'?bat():f==='human'?human():vamp()}
 function setRemote(d){let o=others[d.id];if(!o){o={cls:'',form:'',m:null};others[d.id]=o}
  if(o.cls!==d.c||o.form!==d.f||o.au!==d.au){const old=o.m,pos=old?old.position.clone():new T.Vector3(d.x,d.y,d.z);if(old)sc.remove(old);o.m=modelFor(d.c,d.f);o.m.position.copy(pos);addAura(o.m,d.au);o.m.add(tag(d.n+' \u00b7 '+(CL[d.c]?CL[d.c].n:'')));o.m.scale.setScalar(d.c==='wolf'?1.2:d.c==='boss'?(d.f==='wolf'?2.4:d.f==='witch'?2.2:2):1);sc.add(o.m);o.cls=d.c;o.form=d.f;o.au=d.au}
  o.tx=d.x;o.ty=d.y;o.tz=d.z;o.r=d.r;updBar(o,d);o.h=d.h;o.mh=d.mh;o.nm=d.n;if(d.rx!==undefined&&!o.rock)o.rock=makeRock(d.rx,d.rz,d.n+"'s rock")}
