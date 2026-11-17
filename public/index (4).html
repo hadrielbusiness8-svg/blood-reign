@@ -395,15 +395,24 @@ function hawkM(){const g=new T.Group(),fe=M(0x6a4420),dk=M(0x3a2410),wh=M(0xf0e8
  g.userData={lL,lR,aL:a[0],aR:a[1],wing:1};return g}
 function saveCamp(){try{localStorage.setItem('brbg_camp',JSON.stringify(camp))}catch(e){}}
 const ebolts=[];
-function clearLvm(){for(let i=vs.length-1;i>=0;i--)if(vs[i].lvm){sc.remove(vs[i].m);vs.splice(i,1)}}
+let lvOn=false;
+function clearLvm(){for(let i=vs.length-1;i>=0;i--)if(vs[i].lvm||vs[i].lvciv){if(vs[i].lvciv&&!vs[i].dead)pop--;sc.remove(vs[i].m);vs.splice(i,1)}}
+// villagers that live in the new villages (the first 5 villages already have their own people)
+function spawnCiv(V,k){const hk=k===0,hi=houses.findIndex(h=>h.vx===V.x&&h.vz===V.z),h=houses[hi+(k&3)],g=new T.Group(),legM=M(0x2a2420),bm=M(hk?0x1f4a3a:pal[R()*7|0]),sk=M(skins[R()*4|0]);
+ add(bodyG,bm,0,1.05,0,g);add(headG,sk,0,1.85,0,g);add(new T.SphereGeometry(.235,8,6),M([0x0a0a0a,0x2a1a10,0x4a3020,0x8a8a8a][R()*4|0]),0,1.93,-.03,g).scale.set(1,.75,1);
+ [-1,1].forEach(q=>{add(new T.CylinderGeometry(.065,.075,.75,6),bm,q*.38,1.2,0,g);add(new T.SphereGeometry(.07,6,5),sk,q*.38,.8,0,g)});
+ if(hk){add(new T.BoxGeometry(.07,1.1,.07),M(0xb8bcc4),.42,1.15,.3,g);add(new T.ConeGeometry(.3,.35,6),M(0x1f4a3a),0,2.08,0,g)}
+ const lL=new T.Group(),lR=new T.Group();lL.position.set(-.14,.55,0);lR.position.set(.14,.55,0);g.add(lL,lR);add(legG,legM,0,-.27,0,lL);add(legG,legM,0,-.27,0,lR);
+ if(GQ!=='high')g.add(blob());g.userData={lL,lR};g.scale.setScalar(.9+R()*.2);g.position.set(h.dx+(R()-.5)*3,0,h.dz+(R()-.5)*3);g.rotation.y=R()*6.28;sc.add(g);
+ const v={m:g,hunter:hk,lvciv:true,vx:V.x,vz:V.z,home:hi+(k&3),blood:100,fear:0,wait:R()*4,dead:false,fall:0,t:R()*9,sp:1.4+R()*1.2};pick(v);vs.push(v);pop++}
 function spawnLvm(kind,L,x,z){const g=kind==='vampire'?vamp():kind==='wolf'?wolf():kind==='shader'?shaderM():kind==='boogeyman'?boogeyM():kind==='discoguy'?discoM():kind==='hawkman'?hawkM():witch(),pw=1+.25*(L-1);
  g.position.set(x,0,z);g.scale.setScalar(kind==='wolf'?1.25:kind==='boogeyman'||kind==='discoguy'?1.35:1.1);sc.add(g);if(GQ!=='high')g.add(blob());const hp=Math.round(LVHP[kind]*pw);
  const v={m:g,wild:true,lvm:true,kind,pw,home:{x,z},blood:hp,hpMax:hp,fear:0,wait:0,dead:false,fall:0,t:R()*9,sp:LVSP[kind],agg:0,cd:0,cdk:{},tx:x,tz:z,hunter:false,vx:x,vz:z};
  v.bar=wildBar(g);const ch=g.children;ch[ch.length-1].position.y=ch[ch.length-2].position.y=4.4;
  const lb=nameSprite('Lv '+L+' '+LVN[kind]);lb.position.y=5.6;lb.scale.set(3.5,.9,1);g.add(lb);vs.push(v);return v}
 function startLevel(){if(camp.tv<0)camp.tv=VIL.indexOf(nearestVil()[0]);clearLvm();const V=VIL[camp.tv],L=camp.level,cfg=LEVELS[L]||LEVELS[1];
- cfg.mons.forEach((k,i)=>{const a=i*2.1+.6,r=26+R()*8;spawnLvm(k,L,V.x+Math.cos(a)*r,V.z+Math.sin(a)*r)});saveCamp();
- msg(L>1&&!LEVELS[L]?'Level '+L+': new monsters are coming soon, so the Level 1 fiends return stronger in '+V.t:'Level '+L+' - '+cfg.name+': monsters occupy '+V.t+'! Defeat them all.');msgT=6}
+ cfg.mons.forEach((k,i)=>{const a=i*2.1+.6,r=26+R()*8;spawnLvm(k,L,V.x+Math.cos(a)*r,V.z+Math.sin(a)*r)});if(camp.tv>=5)for(let k=0;k<9;k++)spawnCiv(V,k);lvOn=true;saveCamp();
+ msg(L>1&&!LEVELS[L]?'Level '+L+': new monsters are coming soon, so the Level 1 fiends return stronger in '+V.t:'Level '+L+' - '+cfg.name+': monsters occupy '+V.t+'! Kill all the monsters and every villager to conquer it.');msgT=6}
 function hitP(v,dmg,fx,sec){const d=dmg*v.pw*(v.beast>0?1.8:1)*(P.titan>0?.4:1);P.hp-=d;P.cause='The '+LVN[v.kind]+' got you';P.shake=.3;if(!(P.titan>0)&&fx){if(fx==='stun')P.stun=sec;else if(fx==='slow')P.slowT=sec;else if(fx==='blind')P.blindT=sec}sfx(110,.12)}
 function aoeM(v,r,dmg,fx,sec){const pos=v.m.position;if(flat(pos,P.m.position)<r&&P.m.position.y<4)hitP(v,dmg,fx,sec);for(const o of vs){if(o.wild||o.dead)continue;if(flat(o.m.position,pos)<r){drain(o,dmg*v.pw*.4);o.fear=4}}}
 function eBolt(v,tx,tz,dmg,fx,sec,col){const pos=v.m.position,dx=tx-pos.x,dz=tz-pos.z,L=Math.hypot(dx,dz)||1,m=new T.Mesh(new T.SphereGeometry(.4,10,8),new T.MeshBasicMaterial({color:col}));m.position.set(pos.x,1.8,pos.z);sc.add(m);ebolts.push({m,dx:dx/L,dz:dz/L,life:2,dmg,fx,sec,v})}
@@ -468,16 +477,17 @@ function stepLvm(v,dt,p){const m=v.m,pos=m.position,k=v.kind,home=VIL[camp.tv]||
  const q=m.userData,a=moving?Math.sin(v.t*11)*.7:0;if(q.lL){q.lL.rotation.x=a;q.lR.rotation.x=-a}
  if(k==='hawkman'){pos.y=v.leap>0?0:2+Math.sin(v.t*3)*.5;if(q.aL){const f=Math.sin(v.t*9)*.5;q.aL.rotation.z=f;q.aR.rotation.z=-f}}else if(k==='discoguy'&&q.aL){q.aL.rotation.z=Math.sin(v.t*6)*.5+.5;q.aR.rotation.z=-Math.sin(v.t*6+1)*.5-.5}
  const ra=Math.max(0,v.blood/v.hpMax);v.bar.scale.x=1.8*ra+.001;v.bar.position.x=-.9*(1-ra)}
-function killLvm(v){v.dead=true;v.fall=0;score+=100*camp.level;msg('Defeated the '+LVN[v.kind]+'! +'+100*camp.level);sfx(520,.3);if(!vs.some(o=>o.lvm&&!o.dead))setTimeout(conquerVillage,900)}
-function conquerVillage(){const V=VIL[camp.tv],old=camp.level;camp.conq[V.t]=1;camp.level=Math.min(100,camp.level+1);level=camp.level;camp.tv=(camp.tv+1)%VIL.length;if(camp.tv===0)camp.conq={};
+function killLvm(v){v.dead=true;v.fall=0;score+=100*camp.level;msg('Defeated the '+LVN[v.kind]+'! +'+100*camp.level);sfx(520,.3);}
+function conquerVillage(){lvOn=false;const V=VIL[camp.tv],old=camp.level;camp.conq[V.t]=1;camp.level=Math.min(100,camp.level+1);level=camp.level;camp.tv=(camp.tv+1)%VIL.length;if(camp.tv===0)camp.conq={};
  souls+=200*old;P.hp=hpMax();ring(0xffd24a,12);ring(0x40e070,16);sfx(900,.6);msg('VILLAGE CONQUERED! '+V.t+' is free. You are now Level '+level+'. Next: '+VIL[camp.tv].t);msgT=7;saveCamp();saveMeta();setTimeout(startLevel,3500)}
 const _stepWild=stepWild,_killWild=killWild;
 stepWild=function(v,dt,p){if(v.lvm)stepLvm(v,dt,p);else _stepWild(v,dt,p)};
 killWild=function(v){if(v.lvm)killLvm(v);else _killWild(v)};
 nearMon=function(pos,r){let b=null,bd=r;for(const o of vs)if(o.lvm&&!o.dead){const d=flat(o.m.position,pos);if(d<bd){bd=d;b=o}}return b};
 hitMon=function(o,n,pl){if(o&&o.lvm)drain(o,12)};
-stepQuest=function(){const V=VIL[camp.tv]||VIL[0],left=vs.filter(o=>o.lvm&&!o.dead).length,tot=(LEVELS[camp.level]||LEVELS[1]).mons.length;
- $('qt').textContent='Level '+level+' · Conquer '+V.t+': '+left+' of '+tot+' monsters left'+(P.cls==='civ'?' · Civilians cannot fight: use the cult altar (E) or tell a Hunter you want to join':'')};
+stepQuest=function(){const V=VIL[camp.tv]||VIL[0],left=vs.filter(o=>o.lvm&&!o.dead).length,tot=(LEVELS[camp.level]||LEVELS[1]).mons.length,civ=vs.filter(o=>!o.wild&&!o.lvm&&!o.dead&&o.vx===V.x&&o.vz===V.z).length;
+ if(lvOn&&!left&&!civ)conquerVillage();
+ $('qt').textContent='Level '+level+' · Conquer '+V.t+': '+left+' of '+tot+' monsters and '+civ+' villagers left'+(P.cls==='civ'?' · Civilians cannot fight: use the cult altar (E) or tell a Hunter you want to join':'')};
 guideTarget=function(){const q=P.m.position;
  if(typeof others!=='undefined'&&others[0]&&others[0].m)return{x:others[0].m.position.x,z:others[0].m.position.z,t:others[0].nm||'Boss'};
  if(P.cls==='civ'){let b=null,bd=1e9;for(const c of CULTS){const d=flat(c,q);if(d<bd){bd=d;b=c}}return b?{x:b.x,z:b.z,t:'Cult altar'}:null}
@@ -846,7 +856,7 @@ P.m.scale.setScalar((P.cls==='wolf'?(P.beast>0?1.8:P.full?1.5:1.2):P.form==='bat
  if(GQ==='high'){dl.position.set(p.x-20,40,p.z-30);dl.target.position.set(p.x,0,p.z);dl.target.updateMatrixWorld()}
  cam.position.lerp(new T.Vector3(p.x+Math.sin(camYaw)*camD,camD*.75+p.y*.7,p.z+Math.cos(camYaw)*camD),.12);cam.lookAt(p.x-Math.sin(camYaw)*2,1.5+p.y*.7,p.z-Math.cos(camYaw)*2);if(P.shake>0){P.shake-=dt;cam.position.x+=(R()-.5)*.6;cam.position.y+=(R()-.5)*.6}
  if(msgT>0){msgT-=dt;if(msgT<=0)$('msg').textContent=''}
- drawMap();showPrompt();checkOb();stepMons(dt);stepOrbs(dt);fx(dt);netStep(dt);$('pop').textContent='Villagers '+pop+' / '+NV;$('pb').style.width=P.bl+'%';$('ph').style.width=P.hp/hpMax()*100+'%';$('tm').textContent='Lv '+level+' · '+(isDay?'Day':'Night')+(P.cls==='vampire'?' · Taste '+P.taste:'')+(P.cls==='civ'?' · Strength 50':P.cls==='hunter'?' · Strength 100':'')+(P.full?' · FULL MOON':'')+(P.cm?' · Claws':'')+' · HP '+Math.ceil(P.hp);$('pe').style.width=P.en/enMax()*100+'%'}
+ drawMap();showPrompt();checkOb();stepMons(dt);stepOrbs(dt);fx(dt);netStep(dt);$('pop').textContent='Villagers '+Math.max(0,pop)+' / '+Math.max(NV,pop);$('pb').style.width=P.bl+'%';$('ph').style.width=P.hp/hpMax()*100+'%';$('tm').textContent='Lv '+level+' · '+(isDay?'Day':'Night')+(P.cls==='vampire'?' · Taste '+P.taste:'')+(P.cls==='civ'?' · Strength 50':P.cls==='hunter'?' · Strength 100':'')+(P.full?' · FULL MOON':'')+(P.cm?' · Claws':'')+' · HP '+Math.ceil(P.hp);$('pe').style.width=P.en/enMax()*100+'%'}
 // ---- online ----
 const others={};let ws=null,myId=0,sendT=0,online=0;
 function tag(name){const c=document.createElement('canvas');c.width=256;c.height=64;const x=c.getContext('2d');x.font='bold 34px Georgia';x.textAlign='center';x.fillStyle='#fff';x.strokeStyle='#000';x.lineWidth=6;x.strokeText(name,128,44);x.fillText(name,128,44);const sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(c),depthTest:false}));sp.scale.set(4,1,1);sp.position.y=3.6;return sp}
