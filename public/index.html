@@ -350,8 +350,8 @@ bossModel=function(){const g=new T.Group(),bn=M(0xd8d0b8),dk=M(0x6a6250),eye=new
  g.userData={lL,lR,aL:a[0],aR:a[1]};return g};
 // ===== CAMPAIGN: spawn in a village, levels 1 to 100, conquer villages one at a time =====
 // To add a level later, add an entry here, e.g. 2:{name:'...',mons:['vampire','wolf','witch']}. Levels without an entry reuse level 1, stronger.
-const LEVELS={1:{name:'The Three Fiends',mons:['vampire','wolf','witch']},2:{name:'Terrors of the Dark',mons:['shader','boogeyman']},3:{name:'Night Fever and Talons',mons:['discoguy','hawkman']},4:{name:'Death and Drums',mons:['reaper','drumpler']}};
-const LVN={vampire:'Vampire',wolf:'Werewolf',witch:'Witch',shader:'Shader',boogeyman:'Boogeyman',discoguy:'Discoguy',hawkman:'Hawkman',reaper:'Reaper',drumpler:'Drumpler'},LVHP={vampire:500,wolf:350,witch:220,shader:600,boogeyman:900,discoguy:1100,hawkman:900,reaper:1300,drumpler:1600},LVSP={vampire:5,wolf:7,witch:3.5,shader:6,boogeyman:4.5,discoguy:5.5,hawkman:8,reaper:6.5,drumpler:4.5};
+const LEVELS={1:{name:'The Three Fiends',mons:['vampire','wolf','witch']},2:{name:'Terrors of the Dark',mons:['shader','boogeyman']},3:{name:'Night Fever and Talons',mons:['discoguy','hawkman']},4:{name:'Death and Drums',mons:['reaper','drumpler']},5:{name:'Spirits and Spells',mons:['ghost','mimicy','wizarde']}};
+const LVN={vampire:'Vampire',wolf:'Werewolf',witch:'Witch',shader:'Shader',boogeyman:'Boogeyman',discoguy:'Discoguy',hawkman:'Hawkman',reaper:'Reaper',drumpler:'Drumpler',ghost:'Ghost',mimicy:'Mimicy',wizarde:'Wizarde'},LVHP={vampire:500,wolf:350,witch:220,shader:600,boogeyman:900,discoguy:1100,hawkman:900,reaper:1300,drumpler:1600,ghost:1500,mimicy:1900,wizarde:1400},LVSP={vampire:5,wolf:7,witch:3.5,shader:6,boogeyman:4.5,discoguy:5.5,hawkman:8,reaper:6.5,drumpler:4.5,ghost:6,mimicy:6.5,wizarde:4};
 // Level 2 monster models
 function shaderM(){const g=new T.Group(),sh=M(0x1a1030,0x140a2a),dk=M(0x07050c),ey=M(0xb8f0ff,0x7fe0ff);sh.transparent=true;sh.opacity=.72;dk.transparent=true;dk.opacity=.92;
  const lL=new T.Group(),lR=new T.Group();lL.position.set(-.2,.9,0);lR.position.set(.2,.9,0);g.add(lL,lR);
@@ -413,6 +413,32 @@ function drumM(){const g=new T.Group(),sk=M(0xa86a44),cl=M(0x5a2a6a),dr=M(0xb02a
  [-.18,.18].forEach(x=>add(new T.SphereGeometry(.07,8,8),M(0xffffff,0xffffff),x,.05,.42,h));add(new T.BoxGeometry(.4,.1,.1),dk,0,-.2,.46,h);
  const a=[-1,1].map(s=>{const q=new T.Group();q.position.set(s*1.15,2.9,0);g.add(q);add(new T.BoxGeometry(.4,1.7,.4),sk,0,-.85,0,q);add(new T.CylinderGeometry(.05,.05,1.6,6),st,0,-1.7,.5,q).rotation.x=1;add(new T.SphereGeometry(.12,8,8),st,0,-2.35,.95,q);return q});
  g.userData={lL,lR,aL:a[0],aR:a[1]};return g}
+// Level 5 monster models
+function ghostM(){const g=new T.Group(),wh=M(0xe8f0ff,0x8090b0),dk=M(0x05050a),gl=M(0x9fe8ff,0x60c0e0);[wh,gl].forEach(m=>{m.transparent=true;m.opacity=.6});
+ const lL=new T.Group(),lR=new T.Group();g.add(lL,lR);
+ add(new T.ConeGeometry(1.2,3,14),wh,0,1.5,0,g).rotation.x=Math.PI;add(new T.SphereGeometry(.8,14,12),wh,0,3.1,0,g);
+ for(let i=0;i<6;i++){const a=i*1.047;add(new T.ConeGeometry(.22,.9,5),wh,Math.cos(a)*.85,.1,Math.sin(a)*.85,g).rotation.x=Math.PI}
+ [-.28,.28].forEach(x=>{add(new T.SphereGeometry(.17,8,8),dk,x,3.2,.65,g).scale.set(1,1.5,.6);add(new T.SphereGeometry(.05,6,6),gl,x,3.2,.78,g)});add(new T.SphereGeometry(.18,8,8),dk,0,2.8,.68,g).scale.set(1,1.4,.6);
+ const a=[-1,1].map(s=>{const q=new T.Group();q.position.set(s*.95,2.4,.1);g.add(q);const w=add(new T.ConeGeometry(.2,1.6,6),wh,0,-.8,0,q);w.rotation.x=Math.PI;return q});
+ g.userData={lL,lR,aL:a[0],aR:a[1]};return g}
+function mimicM(){const g=new T.Group(),wd=M(0x6a4020),gd=M(0xd8b04a,0x504010),tt=M(0xf4f0e0),rd=M(0xb02040,0x400010),ey=M(0xffe040,0xc09000);
+ const lL=new T.Group(),lR=new T.Group();lL.position.set(-.6,.6,0);lR.position.set(.6,.6,0);g.add(lL,lR);
+ [lL,lR].forEach(l=>{add(new T.BoxGeometry(.4,.7,.5),wd,0,-.3,.1,l);add(new T.BoxGeometry(.55,.2,.8),gd,0,-.6,.25,l)});
+ add(new T.BoxGeometry(2,1.2,1.4),wd,0,1.2,0,g);add(new T.BoxGeometry(2.1,.2,1.5),gd,0,.65,0,g);add(new T.BoxGeometry(.3,.5,.1),gd,0,1.5,.72,g);
+ add(new T.BoxGeometry(1.8,.9,1.2),rd,0,1.95,0,g);
+ const lid=new T.Group();lid.position.set(0,2.35,-.7);lid.rotation.x=-.9;g.add(lid);add(new T.BoxGeometry(2,.3,1.4),wd,0,0,.7,lid);add(new T.BoxGeometry(2.1,.12,1.5),gd,0,.15,.7,lid);
+ for(let i=-4;i<=4;i++){add(new T.ConeGeometry(.12,.45,4),tt,i*.22,2.3,.6,g).rotation.x=Math.PI;add(new T.ConeGeometry(.12,.4,4),tt,i*.22,1.65,.6,g)}
+ add(new T.BoxGeometry(.3,.1,1.3),rd,0,1.9,.9,g);[-.5,.5].forEach(x=>add(new T.SphereGeometry(.16,8,8),ey,x,2.6,-.35,g));
+ const a=[-1,1].map(s=>{const q=new T.Group();q.position.set(s*1.1,1.5,0);g.add(q);add(new T.BoxGeometry(.2,.2,1.1),rd,0,0,.5,q);return q});
+ g.userData={lL,lR,aL:a[0],aR:a[1]};return g}
+function wizM(){const g=new T.Group(),rb=M(0x2a3a9a,0x101a50),sk=M(0xd8b090),wh=M(0xf0f0f0),hat=M(0x1a2470),gd=M(0xffd24a,0x806010),or=M(0x66d0ff,0x3090e0),st=M(0x5a3a1a);
+ const lL=new T.Group(),lR=new T.Group();lL.position.set(-.25,.8,0);lR.position.set(.25,.8,0);g.add(lL,lR);[lL,lR].forEach(l=>{add(new T.BoxGeometry(.3,.8,.3),M(0x1a1a2a),0,-.4,0,l)});
+ add(new T.ConeGeometry(1,2.4,12),rb,0,1.9,0,g);add(new T.CylinderGeometry(.55,.6,.2,12),gd,0,1.5,0,g);
+ const h=new T.Group();h.position.set(0,3.2,0);g.add(h);add(new T.SphereGeometry(.38,12,10),sk,0,0,0,h);add(new T.ConeGeometry(.45,1.4,8),wh,0,-.55,.2,h).rotation.x=Math.PI;
+ add(new T.CylinderGeometry(.7,.7,.1,14),hat,0,.3,0,h);add(new T.ConeGeometry(.5,1.4,10),hat,0,1,-.05,h).rotation.x=-.15;[-.14,.14].forEach(x=>add(new T.SphereGeometry(.05,6,6),M(0x000000),x,.05,.33,h));
+ const a=[-1,1].map(s=>{const q=new T.Group();q.position.set(s*.8,2.6,0);g.add(q);add(new T.BoxGeometry(.22,1.2,.22),rb,0,-.6,0,q);add(new T.SphereGeometry(.12,8,8),sk,0,-1.3,.1,q);
+  if(s===1){add(new T.CylinderGeometry(.06,.06,3.4,6),st,0,-.3,.4,q);add(new T.SphereGeometry(.3,10,8),or,0,1.5,.4,q)}return q});
+ g.userData={lL,lR,aL:a[0],aR:a[1]};return g}
 function saveCamp(){try{localStorage.setItem('brbg_camp',JSON.stringify(camp))}catch(e){}}
 const ebolts=[];
 let lvOn=false;
@@ -425,8 +451,8 @@ function spawnCiv(V,k,hk,perm){const hi=houses.findIndex(h=>h.vx===V.x&&h.vz===V
  const lL=new T.Group(),lR=new T.Group();lL.position.set(-.14,.55,0);lR.position.set(.14,.55,0);g.add(lL,lR);add(legG,legM,0,-.27,0,lL);add(legG,legM,0,-.27,0,lR);
  if(GQ!=='high')g.add(blob());g.userData={lL,lR};g.scale.setScalar(.9+R()*.2);g.position.set(h.dx+(R()-.5)*3,0,h.dz+(R()-.5)*3);g.rotation.y=R()*6.28;sc.add(g);
  const v={m:g,hunter:hk,lvciv:!perm,vx:V.x,vz:V.z,home:hi+(k&3),blood:100,fear:0,wait:R()*4,dead:false,fall:0,t:R()*9,sp:1.4+R()*1.2};pick(v);vs.push(v);pop++}
-function spawnLvm(kind,L,x,z){const g=kind==='vampire'?vamp():kind==='wolf'?wolf():kind==='shader'?shaderM():kind==='boogeyman'?boogeyM():kind==='discoguy'?discoM():kind==='hawkman'?hawkM():kind==='reaper'?reaperM():kind==='drumpler'?drumM():witch(),pw=1+.25*(L-1);
- g.position.set(x,0,z);g.scale.setScalar(kind==='wolf'?1.25:kind==='boogeyman'||kind==='discoguy'?1.35:kind==='drumpler'?1.4:1.1);sc.add(g);if(GQ!=='high')g.add(blob());const hp=Math.round(LVHP[kind]*pw);
+function spawnLvm(kind,L,x,z){const g=kind==='vampire'?vamp():kind==='wolf'?wolf():kind==='shader'?shaderM():kind==='boogeyman'?boogeyM():kind==='discoguy'?discoM():kind==='hawkman'?hawkM():kind==='reaper'?reaperM():kind==='drumpler'?drumM():kind==='ghost'?ghostM():kind==='mimicy'?mimicM():kind==='wizarde'?wizM():witch(),pw=1+.25*(L-1);
+ g.position.set(x,0,z);g.scale.setScalar(kind==='wolf'?1.25:kind==='boogeyman'||kind==='discoguy'?1.35:kind==='drumpler'?1.4:kind==='mimicy'?1.5:1.1);sc.add(g);if(GQ!=='high')g.add(blob());const hp=Math.round(LVHP[kind]*pw);
  const v={m:g,wild:true,lvm:true,kind,pw,home:{x,z},blood:hp,hpMax:hp,fear:0,wait:0,dead:false,fall:0,t:R()*9,sp:LVSP[kind],agg:0,cd:0,cdk:{},tx:x,tz:z,hunter:false,vx:x,vz:z};
  v.bar=wildBar(g);const ch=g.children;ch[ch.length-1].position.y=ch[ch.length-2].position.y=4.4;
  const lb=nameSprite('Lv '+L+' '+LVN[kind]);lb.position.y=5.6;lb.scale.set(3.5,.9,1);g.add(lb);vs.push(v);return v}
@@ -450,7 +476,7 @@ function stepLvm(v,dt,p){const m=v.m,pos=m.position,k=v.kind,home=VIL[camp.tv]||
  if(k==='drumpler'&&v.blood<v.hpMax*.35&&!v.beasted){v.beasted=1;v.beast=8;msg('Drumpler is in a frenzy!')}
  if(k==='wolf'&&v.blood<v.hpMax*.5&&!v.beasted){v.beasted=1;v.beast=10;v.blood=Math.min(v.hpMax,v.blood+v.hpMax*.15)}
  if(k==='wolf'&&v.blood<v.hpMax*.4&&!v.regened){v.regened=1;v.regen=10}
- let sp=v.sp*(v.spdT>0?2.5:1)*(v.beast>0?1.2:1),keep=k==='witch'?13:2.2,moving=false;
+ let sp=v.sp*(v.spdT>0?2.5:1)*(v.beast>0?1.2:1),keep=k==='witch'?13:k==='wizarde'?14:2.2,moving=false;
  if(tgt){const dx=tgt.x-pos.x,dz=tgt.z-pos.z;m.rotation.y=Math.atan2(dx,dz);
   const dmgT=(d,fx,s)=>{if(tgt.pl)hitP(v,d,fx,s);else if(tgt.o){drain(tgt.o,d*v.pw*.6);tgt.o.fear=3}};
   if(k==='vampire'){
@@ -482,6 +508,23 @@ function stepLvm(v,dt,p){const m=v.m,pos=m.position,k=v.kind,home=VIL[camp.tv]||
    if(td>6&&td<30&&cdOk('feather',2))eBolt(v,tgt.x,tgt.z,32,'',0,0xe8c070);
    if(td>8&&td<35&&cdOk('dive',8))v.leap=.4;
    if(td<12&&cdOk('gust',12)){aoeM(v,12,20,'slow',3);P.shake=.4}
+  }else if(k==='ghost'){
+   if(td<3.2&&cdOk('touch',1))dmgT(55);
+   if(td>5&&td<30&&cdOk('spirit',2.2))eBolt(v,tgt.x,tgt.z,35,'blind',1.5,0x9fe8ff);
+   if(td>10&&td<40&&cdOk('phase',7)){const d2=Math.hypot(dx,dz)||1,nx=tgt.x-dx/d2*3,nz=tgt.z-dz/d2*3;if(Math.hypot(nx-home.x,nz-home.z)<75){pos.x=nx;pos.z=nz}}
+   if(td<14&&cdOk('haunt',11))aoeM(v,14,25,'slow',3);
+   if(td<10&&cdOk('wail',16)){aoeM(v,10,40,'stun',1.5);P.shake=.5}
+  }else if(k==='mimicy'){
+   if(td<3.6&&cdOk('chomp',1))dmgT(65);
+   if(td>4&&td<16&&cdOk('tongue',3))eBolt(v,tgt.x,tgt.z,40,'slow',2,0xb02040);
+   if(td>5&&td<22&&cdOk('pounce',7))v.leap=.35;
+   if(td<10&&cdOk('gold',10)){aoeM(v,10,40,'stun',1.5);P.shake=.5}
+  }else if(k==='wizarde'){
+   if(td>5&&td<32&&cdOk('fire',2))eBolt(v,tgt.x,tgt.z,45,'',0,0xff6a20);
+   if(td<16&&cdOk('zap',7))aoeM(v,12,50,'stun',1);
+   if(td<14&&cdOk('frost',12))aoeM(v,14,25,'slow',4);
+   if(td>10&&td<40&&cdOk('blink',9)){const d2=Math.hypot(dx,dz)||1,nx=tgt.x-dx/d2*12,nz=tgt.z-dz/d2*12;if(Math.hypot(nx-home.x,nz-home.z)<75){pos.x=nx;pos.z=nz}}
+   if(td<8)sp=-sp*.9;
   }else if(k==='reaper'){
    if(td<3.8&&cdOk('scythe',1))dmgT(60);
    if(td>6&&td<30&&cdOk('soul',2.4))eBolt(v,tgt.x,tgt.z,35,'slow',2,0x66ffcc);
@@ -507,7 +550,7 @@ function stepLvm(v,dt,p){const m=v.m,pos=m.position,k=v.kind,home=VIL[camp.tv]||
   const dd=Math.hypot(dx,dz)||1;if(dd>keep||sp<0){const nx=pos.x+dx/dd*sp*dt,nz=pos.z+dz/dd*sp*dt;if(Math.hypot(nx-home.x,nz-home.z)<75){pos.x=nx;pos.z=nz;moving=true}}
  }
  const q=m.userData,a=moving?Math.sin(v.t*11)*.7:0;if(q.lL){q.lL.rotation.x=a;q.lR.rotation.x=-a}
- if(k==='hawkman'){pos.y=v.leap>0?0:2+Math.sin(v.t*3)*.5;if(q.aL){const f=Math.sin(v.t*9)*.5;q.aL.rotation.z=f;q.aR.rotation.z=-f}}else if(k==='reaper'){pos.y=.6+Math.sin(v.t*2)*.2}else if(k==='discoguy'&&q.aL){q.aL.rotation.z=Math.sin(v.t*6)*.5+.5;q.aR.rotation.z=-Math.sin(v.t*6+1)*.5-.5}
+ if(k==='hawkman'){pos.y=v.leap>0?0:2+Math.sin(v.t*3)*.5;if(q.aL){const f=Math.sin(v.t*9)*.5;q.aL.rotation.z=f;q.aR.rotation.z=-f}}else if(k==='reaper'||k==='ghost'){pos.y=.6+Math.sin(v.t*2)*.2}else if(k==='discoguy'&&q.aL){q.aL.rotation.z=Math.sin(v.t*6)*.5+.5;q.aR.rotation.z=-Math.sin(v.t*6+1)*.5-.5}
  const ra=Math.max(0,v.blood/v.hpMax);v.bar.scale.x=1.8*ra+.001;v.bar.position.x=-.9*(1-ra)}
 function killLvm(v){v.dead=true;v.fall=0;score+=100*camp.level;msg('Defeated the '+LVN[v.kind]+'! +'+100*camp.level);sfx(520,.3);}
 function conquerVillage(){lvOn=false;const V=VIL[camp.tv],old=camp.level;camp.conq[V.t]=1;camp.level=Math.min(100,camp.level+1);level=camp.level;camp.tv=(camp.tv+1)%VIL.length;if(camp.tv===0)camp.conq={};
@@ -756,7 +799,7 @@ const enMax=()=>P.full?1e6:CL[P.cls].en,hpMax=()=>((P.full?1000:CL[P.cls].hp)+(P
 function witch(){const g=new T.Group(),rb=M(0x3a1a5a),sk=M(0x8a5a3a),hat=M(0x15101a),lg=M(0x1a1220);const lL=new T.Group(),lR=new T.Group();lL.position.set(-.15,.6,0);lR.position.set(.15,.6,0);g.add(lL,lR);[lL,lR].forEach(l=>add(new T.BoxGeometry(.2,.6,.2),lg,0,-.3,0,l));add(new T.ConeGeometry(.75,1.8,10),rb,0,1.2,0,g);add(new T.SphereGeometry(.25,10,8),sk,0,2.25,0,g);add(new T.CylinderGeometry(.5,.5,.06,12),hat,0,2.45,0,g);add(new T.ConeGeometry(.28,.8,8),hat,0,2.9,0,g);const a=[-1,1].map(s=>{const q=new T.Group();q.position.set(s*.45,1.9,0);g.add(q);add(new T.BoxGeometry(.16,.8,.16),rb,0,-.4,0,q);return q});g.userData={lL,lR,aL:a[0],aR:a[1]};return g}
 function cat(){const g=new T.Group(),f=M(0x22202a),ey=M(0x66ff66,0x22aa22);add(new T.BoxGeometry(.4,.36,.9),f,0,.5,0,g);add(new T.SphereGeometry(.22,10,8),f,0,.68,.55,g);[-.12,.12].forEach(x=>{add(new T.ConeGeometry(.07,.2,4),f,x,.9,.55,g);add(new T.SphereGeometry(.035,6,6),ey,x,.72,.75,g)});add(new T.BoxGeometry(.08,.08,.7),f,0,.75,-.7,g).rotation.x=.6;const lL=new T.Group(),lR=new T.Group();lL.position.set(0,.3,.3);lR.position.set(0,.3,-.3);g.add(lL,lR);[lL,lR].forEach(l=>add(new T.BoxGeometry(.5,.3,.12),f,0,-.12,0,l));g.userData={lL,lR,aL:new T.Group(),aR:new T.Group()};return g}
 function build(){const m=build0();if(GQ!=='high'&&P.form!=='bat'){const b=blob();b.scale.setScalar(1.3);m.add(b)}addAura(m,auraSel);return m}
-function build0(){if(MCL[P.cls])return({shader:shaderM,boogeyman:boogeyM,discoguy:discoM,hawkman:hawkM,reaper:reaperM,drumpler:drumM})[P.cls]();if(P.cls==='civ')return human();if(P.cls==='hunter')return hunterM();if(P.cls==='wolf')return wolf();if(P.cls==='witch')return P.form==='cat'?cat():witch();return P.form==='bat'?bat():P.form==='human'?human():vamp()}
+function build0(){if(MCL[P.cls])return({shader:shaderM,boogeyman:boogeyM,discoguy:discoM,hawkman:hawkM,reaper:reaperM,drumpler:drumM,ghost:ghostM,mimicy:mimicM,wizarde:wizM})[P.cls]();if(P.cls==='civ')return human();if(P.cls==='hunter')return hunterM();if(P.cls==='wolf')return wolf();if(P.cls==='witch')return P.form==='cat'?cat():witch();return P.form==='bat'?bat():P.form==='human'?human():vamp()}
 function spell(t,cost){if(P.form==='cat'){msg('Change back from the cat first');return}let best=null,bd=14;for(const v of vs)if(!v.dead){const d=flat(v.m.position,P.m.position);if(d<bd){bd=d;best=v}}
  if(!best){msg('No target close enough');return}if(P.bl<cost){msg('Not enough Magic');return}
  P.bl-=cost;P.atk=.4;S.spells++;P.m.rotation.y=Math.atan2(best.m.position.x-P.m.position.x,best.m.position.z-P.m.position.z);
@@ -775,15 +818,18 @@ function respawn(){for(const o of vs)if(o.lvm&&!o.dead&&flat(o.m.position,ROCK)<
 function wolf(){const g=new T.Group(),fur=M(0x4a3a2c),dk=M(0x2a2018),bel=M(0x7a6a58),cl=M(0xeeeeee),ey=M(0xffcc00,0xffaa00);const lL=new T.Group(),lR=new T.Group();lL.position.set(-.3,1.1,0);lR.position.set(.3,1.1,0);g.add(lL,lR);[lL,lR].forEach(l=>{add(new T.BoxGeometry(.42,1.1,.42),fur,0,-.55,0,l);add(new T.BoxGeometry(.5,.3,.7),dk,0,-1,.12,l)});add(new T.BoxGeometry(1.2,1.3,.7),fur,0,1.8,0,g);add(new T.BoxGeometry(.8,.8,.5),bel,0,1.6,.2,g);const h=new T.Group();h.position.set(0,2.8,.2);g.add(h);add(new T.SphereGeometry(.38,12,10),fur,0,0,0,h);add(new T.BoxGeometry(.28,.24,.5),fur,0,-.1,.4,h);add(new T.BoxGeometry(.1,.08,.1),dk,0,0,.66,h);[-.22,.22].forEach(x=>{add(new T.ConeGeometry(.1,.3,4),dk,x,.38,-.05,h);add(new T.SphereGeometry(.05,8,8),ey,x*.7,.1,.33,h)});const tail=add(new T.BoxGeometry(.2,.2,.9),fur,0,1.2,-.7,g);tail.rotation.x=-.5;const a=[-1,1].map(s=>{const q=new T.Group();q.position.set(s*.8,2.3,0);g.add(q);add(new T.BoxGeometry(.3,1.3,.3),fur,0,-.65,0,q);[-.08,0,.08].forEach(x=>add(new T.ConeGeometry(.04,.25,4),cl,x,-1.4,.05,q).rotation.x=Math.PI);return q});g.userData={lL,lR,aL:a[0],aR:a[1]};return g}
 const CL={vampire:{n:'Vampire',bar:'Blood',hp:1000,en:10000,hint:'WASD move · Space jump · K bite · Shift dash · E Bat (night) · Q Human (day) · F Drain · R Speed · T Shadow · G Blast · Z Nova · X Chains · C Lord (full Blood)',l:['Bite','Bat','Human','Drain','Speed','Shadow','Blast','Nova','Chains','Lord']},wolf:{n:'Werewolf',bar:'Rage',hp:550,en:100000,hint:'WASD move · Space jump · K claw · E Claws mode · Q Beast · F Leap · R Regen · T Roar · Z Pounce · X Frenzy · C Titan (full Rage) · Shift dash',l:['Claw','Claws','Beast','Leap','Regen','Roar','','Pounce','Frenzy','Titan']},witch:{n:'Witch',bar:'Magic',hp:100,en:1000,hint:'WASD move · Space jump · Shift dash · E Infect · Q Blind · F Cat form · Z Hex Bolt · X Plague Storm · C Coven Storm (full Magic)',l:['','Infect','Blind','Cat','','','','Hex','Plague','Storm']},civ:{n:'Civilian',bar:'Villager',hp:100,en:1000,hint:'WASD move · Space jump · Shift dash · E talk (at the cult altar or to a hunter)',l:['','Talk','','']},hunter:{n:'Hunter',bar:'Hunter',hp:100,en:1000,hint:'WASD move · Space jump · K sword · Shift dash',l:['Sword','','','']}};
 // ===== playable level monsters: unlocked by campaign level, and the higher the level the stronger they are =====
-const MCL={shader:{lv:2},boogeyman:{lv:2},discoguy:{lv:3},hawkman:{lv:3},reaper:{lv:4},drumpler:{lv:4}};
+const MCL={shader:{lv:2},boogeyman:{lv:2},discoguy:{lv:3},hawkman:{lv:3},reaper:{lv:4},drumpler:{lv:4},ghost:{lv:5},mimicy:{lv:5},wizarde:{lv:5}};
 Object.assign(CL,{
  shader:{n:'Shader',bar:'Shadow',hp:1500,en:100000,pw:1.3,hint:'WASD move · Space jump · K slash · E Shadow Bolt · Q Blink · F Gloom · R Void · Shift dash',l:['Slash','Bolt','Blink','Gloom','Void']},
  boogeyman:{n:'Boogeyman',bar:'Dread',hp:2200,en:100000,pw:1.6,hint:'WASD move · Space jump · K swipe · E Slam · Q Lunge · F Fear · R Rage · Shift dash',l:['Swipe','Slam','Lunge','Fear','Rage']},
  discoguy:{n:'Discoguy',bar:'Groove',hp:3000,en:100000,pw:1.9,hint:'WASD move · Space jump · K kick · E Light Beam · Q Dance Floor · F Strobe · R Disco Fever · Shift dash',l:['Kick','Beam','Floor','Strobe','Fever']},
  hawkman:{n:'Hawkman',bar:'Wind',hp:2600,en:100000,pw:1.8,hint:'WASD move · Space jump · K talon · E Feather · Q Dive · F Gust · R Tailwind · Shift dash',l:['Talon','Feather','Dive','Gust','Wind']},
  reaper:{n:'Reaper',bar:'Souls',hp:3400,en:100000,pw:2.2,hint:'WASD move · Space jump · K scythe · E Soul Bolt · Q Reap · F Wail · R Phase · Shift dash',l:['Scythe','Soul','Reap','Wail','Phase']},
- drumpler:{n:'Drumpler',bar:'Rhythm',hp:4200,en:100000,pw:2.5,hint:'WASD move · Space jump · K smash · E Sound Wave · Q Drum Roll · F Bass Drop · R Rhythm · Shift dash',l:['Smash','Wave','Roll','Bass','Beat']}});
-const MPR={shader:[40,3.6,1],boogeyman:[55,3.9,1.1],discoguy:[55,3.6,1],hawkman:[50,3.6,.8],reaper:[60,3.8,1],drumpler:[60,4,1.2]};
+ drumpler:{n:'Drumpler',bar:'Rhythm',hp:4200,en:100000,pw:2.5,hint:'WASD move · Space jump · K smash · E Sound Wave · Q Drum Roll · F Bass Drop · R Rhythm · Shift dash',l:['Smash','Wave','Roll','Bass','Beat']},
+ ghost:{n:'Ghost',bar:'Spirit',hp:4800,en:100000,pw:2.8,hint:'WASD move · Space jump · K touch · E Spirit Bolt · Q Haunt · F Vanish · R Wail · Shift dash',l:['Touch','Spirit','Haunt','Vanish','Wail']},
+ mimicy:{n:'Mimicy',bar:'Greed',hp:5600,en:100000,pw:3.1,hint:'WASD move · Space jump · K chomp · E Tongue · Q Pounce · F Gold Burst · R Ambush · Shift dash',l:['Chomp','Tongue','Pounce','Gold','Ambush']},
+ wizarde:{n:'Wizarde',bar:'Mana',hp:5000,en:100000,pw:3.4,hint:'WASD move · Space jump · K staff · E Fireball · Q Lightning · F Frost Nova · R Arcane Shield · Shift dash',l:['Staff','Fire','Zap','Frost','Shield']}});
+const MPR={shader:[40,3.6,1],boogeyman:[55,3.9,1.1],discoguy:[55,3.6,1],hawkman:[50,3.6,.8],reaper:[60,3.8,1],drumpler:[60,4,1.2],ghost:[55,3.6,1],mimicy:[65,3.6,1],wizarde:[45,3.6,.9]};
 function mprim(){if(P.cd>0||P.en<300)return;const [d,r,cd]=MPR[P.cls],a=near(r),pv=pvpTargets(r);if(!a.length&&!pv.length){msg('No one close enough');return}
  P.en-=300;P.cd=cd*(P.frenzy>0?.5:1);P.atk=.4;if(a.length)P.m.rotation.y=Math.atan2(a[0].m.position.x-P.m.position.x,a[0].m.position.z-P.m.position.z);
  a.forEach(v=>drain(v,d*mul()));if(pv.length)pvpHit(r,d);near(14).forEach(v=>v.fear=6)}
@@ -803,6 +849,21 @@ function mpower(k){const c=P.cls,disc=[0xff2a8a,0x2affd0,0xffe02a,0x2a6aff];
   else if(k==='q'&&can('q',3000,11)){aoe(14,30,'stun',1.5);ring(0xff2a8a,14);P.shake=.5;msg('DANCE FLOOR')}
   else if(k==='f'&&can('f',3000,15)){aoe(20,15,'blind',3);ring(0xffe02a,20);msg('STROBE')}
   else if(k==='r'&&can('r',6000,25)){P.frenzy=8;msg('DISCO FEVER')}
+ }else if(c==='ghost'){
+  if(k==='e'&&can('e',1500,2.2))fireBolt(0x9fe8ff,45,'blind',1.5);
+  else if(k==='q'&&can('q',3000,11)){aoe(14,25,'slow',3);ring(0x9fe8ff,14);msg('HAUNT')}
+  else if(k==='f'&&can('f',5000,20)){P.inv=6;msg('VANISH: invisible for 6 seconds')}
+  else if(k==='r'&&can('r',4000,16)){aoe(10,40,'stun',1.5);P.shake=.5;ring(0xffffff,10);msg('WAIL')}
+ }else if(c==='mimicy'){
+  if(k==='e'&&can('e',1500,3))fireBolt(0xb02040,40,'slow',2);
+  else if(k==='q'&&P.m.position.y<.5&&can('q',2500,7)){P.vy=14;P.dash=.45;aoe(5,70);msg('POUNCE')}
+  else if(k==='f'&&can('f',3000,10)){aoe(10,40,'stun',1.5);P.shake=.5;ring(0xd8b04a,10);msg('GOLD BURST')}
+  else if(k==='r'&&can('r',6000,25)){P.frenzy=8;msg('AMBUSH: faster attacks')}
+ }else if(c==='wizarde'){
+  if(k==='e'&&can('e',1500,1.6))fireBolt(0xff6a20,60);
+  else if(k==='q'&&can('q',3000,7)){aoe(10,50,'stun',1);ring(0xffffaa,10);P.shake=.4;msg('LIGHTNING')}
+  else if(k==='f'&&can('f',3000,12)){aoe(12,25,'slow',4);ring(0x66d0ff,12);msg('FROST NOVA')}
+  else if(k==='r'&&can('r',6000,30)){P.titan=8;msg('ARCANE SHIELD: takes less damage')}
  }else if(c==='reaper'){
   if(k==='e'&&can('e',1500,2.2))fireBolt(0x66ffcc,45,'slow',2);
   else if(k==='q'&&can('q',3000,9)){aoe(8,60);P.hp=Math.min(hpMax(),P.hp+hpMax()*.1);ring(0x66ffcc,8);msg('REAP: heals you')}
@@ -821,7 +882,7 @@ function mpower(k){const c=P.cls,disc=[0xff2a8a,0x2affd0,0xffe02a,0x2a6aff];
 const UNL={};
 function pickClass(c){const m=MCL[c];if(m&&level<m.lv){msg('Reach Level '+m.lv+' to become a '+CL[c].n);return}setClass(c)}
 function refreshCult(){const box=document.querySelector('#sel .cards');for(const c in MCL){let d=document.getElementById('cm_'+c);if(!d){d=document.createElement('div');d.className='cd';d.id='cm_'+c;box.appendChild(d)}
- const k=CL[c],ok=level>=MCL[c].lv;d.style.opacity=ok?1:.45;d.innerHTML='<h3>'+k.n+' <small>(Level '+MCL[c].lv+' monster)</small></h3><p>HP '+k.hp+' · Power x'+k.pw+'</p><p>'+k.l.map((x,i)=>['K','E','Q','F','R'][i]+' '+x).join(' · ')+'</p><button onclick="pickClass(\''+c+'\')">'+(ok?'Become a '+k.n+' ('+({shader:4,boogeyman:5,discoguy:6,hawkman:7,reaper:8,drumpler:9})[c]+')':'Unlocks at Level '+MCL[c].lv)+'</button>'}}
+ const k=CL[c],ok=level>=MCL[c].lv;d.style.opacity=ok?1:.45;d.innerHTML='<h3>'+k.n+' <small>(Level '+MCL[c].lv+' monster)</small></h3><p>HP '+k.hp+' · Power x'+k.pw+'</p><p>'+k.l.map((x,i)=>['K','E','Q','F','R'][i]+' '+x).join(' · ')+'</p><button onclick="pickClass(\''+c+'\')">'+(ok?'Become a '+k.n+(({shader:4,boogeyman:5,discoguy:6,hawkman:7,reaper:8,drumpler:9})[c]?' ('+({shader:4,boogeyman:5,discoguy:6,hawkman:7,reaper:8,drumpler:9})[c]+')':''):'Unlocks at Level '+MCL[c].lv)+'</button>'}}
 function setClass(c){const o=P.m.position.clone(),ry=P.m.rotation.y;sc.remove(P.m);P.cls=c;P.form='normal';P.full=false;P.cm=false;P.tier=1;S.claws=S.spells=S.kills=S.candy=0;P.m=build();P.m.position.set(c==='civ'||c==='hunter'||!HOME[c]?o.x:HOME[c].x,0,c==='civ'||c==='hunter'||!HOME[c]?o.z:HOME[c].z);P.m.rotation.y=ry;sc.add(P.m);P.hp=hpMax();P.taste=100;
  Object.assign(P,{bl:c==='witch'?100:0,en:enMax(),vy:0,fly:0,frenzy:0,slam:0,atk:0,dash:0,c:{e:0,q:0,f:0}});
  const k=CL[c];$('cn').textContent=k.n+' · '+k.bar;$('hint').textContent=k.hint+' · B menu · M map';['tb','te','tq','tf','tr','tt','tg','tz','tx','tc'].forEach((id,i)=>{$(id).textContent=k.l[i]||'';$(id).style.display=k.l[i]?'':'none'});
@@ -942,7 +1003,7 @@ P.m.scale.setScalar((P.cls==='wolf'?(P.beast>0?1.8:P.full?1.5:1.2):P.form==='bat
 // ---- online ----
 const others={};let ws=null,myId=0,sendT=0,online=0;
 function tag(name){const c=document.createElement('canvas');c.width=256;c.height=64;const x=c.getContext('2d');x.font='bold 34px Georgia';x.textAlign='center';x.fillStyle='#fff';x.strokeStyle='#000';x.lineWidth=6;x.strokeText(name,128,44);x.fillText(name,128,44);const sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(c),depthTest:false}));sp.scale.set(4,1,1);sp.position.y=3.6;return sp}
-function modelFor(c,f){if(c==='shader')return shaderM();if(c==='boogeyman')return boogeyM();if(c==='discoguy')return discoM();if(c==='hawkman')return hawkM();if(c==='reaper')return reaperM();if(c==='drumpler')return drumM();if(c==='boss')return f==='wolf'?bossWolf():f==='witch'?bossWitch():bossModel();if(c==='civ')return human();if(c==='hunter')return hunterM();if(c==='wolf')return wolf();if(c==='witch')return f==='cat'?cat():witch();return f==='bat'?bat():f==='human'?human():vamp()}
+function modelFor(c,f){if(c==='shader')return shaderM();if(c==='boogeyman')return boogeyM();if(c==='discoguy')return discoM();if(c==='hawkman')return hawkM();if(c==='reaper')return reaperM();if(c==='drumpler')return drumM();if(c==='ghost')return ghostM();if(c==='mimicy')return mimicM();if(c==='wizarde')return wizM();if(c==='boss')return f==='wolf'?bossWolf():f==='witch'?bossWitch():bossModel();if(c==='civ')return human();if(c==='hunter')return hunterM();if(c==='wolf')return wolf();if(c==='witch')return f==='cat'?cat():witch();return f==='bat'?bat():f==='human'?human():vamp()}
 function setRemote(d){let o=others[d.id];if(!o){o={cls:'',form:'',m:null};others[d.id]=o}
  if(o.cls!==d.c||o.form!==d.f||o.au!==d.au){const old=o.m,pos=old?old.position.clone():new T.Vector3(d.x,d.y,d.z);if(old)sc.remove(old);o.m=modelFor(d.c,d.f);o.m.position.copy(pos);addAura(o.m,d.au);o.m.add(tag(d.n+' \u00b7 '+(CL[d.c]?CL[d.c].n:'')));o.m.scale.setScalar(d.c==='wolf'?1.2:d.c==='boss'?(d.f==='wolf'?2.4:d.f==='witch'?2.2:2):1);sc.add(o.m);o.cls=d.c;o.form=d.f;o.au=d.au}
  o.tx=d.x;o.ty=d.y;o.tz=d.z;o.r=d.r;updBar(o,d);o.h=d.h;o.mh=d.mh;o.nm=d.n;if(d.rx!==undefined&&!o.rock)o.rock=makeRock(d.rx,d.rz,d.n+"'s rock")}
