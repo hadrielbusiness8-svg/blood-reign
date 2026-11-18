@@ -69,7 +69,8 @@ button{font:inherit;background:#b3122b;color:#fff;border:0;border-radius:12px;he
 #map{position:fixed;top:calc(env(safe-area-inset-top,0px) + 54px);right:12px;border:1px solid #5a2a32;border-radius:8px;z-index:3;cursor:pointer}
 #map.big{top:50%;right:auto;left:50%;transform:translate(-50%,-50%);z-index:4}
 #sw{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;height:36px;padding:0 12px;font-size:13px}
-#sel{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(11,8,20,.92);z-index:5;overflow:auto;padding:16px}
+#sel{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:flex-start;background:rgba(11,8,20,.92);z-index:5;overflow:auto;padding:16px}
+#sel>:first-child{margin-top:auto}#sel>:last-child{margin-bottom:auto}
 #sel h2{color:var(--red);margin:0 0 12px}
 .cards{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
 .cd{background:#221015;border-radius:12px;padding:14px;width:min(300px,86vw);font-size:14px}
